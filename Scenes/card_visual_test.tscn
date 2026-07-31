@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://cua1uf67sb6o"]
+
+[ext_resource type="PackedScene" uid="uid://d3w1r0c2g5iv3" path="res://Scenes/player.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://d0lwbpvfidmfd" path="res://Scenes/card_visual.tscn" id="2_rv5er"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_gh8yj"]
+sky_horizon_color = Color(0.55, 0.55, 0.6, 1)
+ground_horizon_color = Color(0.4, 0.4, 0.45, 1)
+
+[sub_resource type="Sky" id="Sky_gh8yj"]
+sky_material = SubResource("ProceduralSkyMaterial_gh8yj")
+
+[sub_resource type="Environment" id="Environment_gh8yj"]
+background_mode = 2
+sky = SubResource("Sky_gh8yj")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_gh8yj"]
+size = Vector2(20, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gh8yj"]
+size = Vector3(20, 0.2, 20)
+
+[node name="CardVisualTest" type="Node3D" unique_id=1997998739]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=670667739]
+environment = SubResource("Environment_gh8yj")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2041966812]
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Floor" type="StaticBody3D" parent="." unique_id=1751969287]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor" unique_id=1787813518]
+mesh = SubResource("PlaneMesh_gh8yj")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor" unique_id=1367331788]
+shape = SubResource("BoxShape3D_gh8yj")
+
+[node name="Player" parent="." unique_id=2084044282 instance=ExtResource("2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 1, 0)
+
+[node name="CardVisual" parent="." unique_id=1991343106 instance=ExtResource("2_rv5er")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2821438, 1.2929945, 3.4557261)

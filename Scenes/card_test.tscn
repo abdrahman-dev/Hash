@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://d4nimwm6ugoev"]
+
+[ext_resource type="Script" uid="uid://docpnhf8itg18" path="res://scripts/card_test_ui.gd" id="1"]
+
+[node name="CardTest" type="Control" unique_id=1210121989]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")

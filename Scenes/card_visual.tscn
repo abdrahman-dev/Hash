@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://d0lwbpvfidmfd"]
+
+[ext_resource type="Script" uid="uid://cwrbdm1lir6wm" path="res://Scripts/card_visual.gd" id="1_kug6m"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v0s4m"]
+shading_mode = 0
+albedo_color = Color(0.9595558, 0, 0.110555746, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh_ql73s"]
+material = SubResource("StandardMaterial3D_v0s4m")
+size = Vector2(0.45, 0.8)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_8i2sw"]
+points = PackedVector3Array(0.22579363, 0.40634918, 0.006349206, -0.2313492, -0.40634918, -0.006349206, -0.2313492, -0.40634918, 0.006349206, -0.2313492, 0.40634918, -0.006349206, 0.22579363, -0.40634918, -0.006349206, 0.22579363, -0.40634918, 0.006349206, -0.2313492, 0.40634918, 0.006349206, 0.22579363, 0.40634918, -0.006349206)
+
+[node name="CardVisual" type="Node3D" unique_id=1991343106]
+script = ExtResource("1_kug6m")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1828444168]
+mesh = SubResource("QuadMesh_ql73s")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1628261648]
+shape = SubResource("ConvexPolygonShape3D_8i2sw")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1933647051]
+light_color = Color(0.6455512, 2.5629624e-06, 4.813075e-07, 1)
+light_energy = 2.0
+omni_range = 3.0

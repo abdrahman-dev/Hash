@@ -1,0 +1,69 @@
+[gd_scene format=3 uid="uid://h8hc2oa8ljvn"]
+
+[ext_resource type="PackedScene" uid="uid://d3w1r0c2g5iv3" path="res://Scenes/player.tscn" id="1_a02cp"]
+[ext_resource type="Script" uid="uid://bdn66073thlw4" path="res://Scripts/maze_generator.gd" id="2_go701"]
+[ext_resource type="Texture2D" uid="uid://32uv1p7dmo05" path="res://Textures/wall.png" id="3_8j60k"]
+[ext_resource type="PackedScene" uid="uid://c4x6cy4j8g31f" path="res://Scenes/monster.tscn" id="3_o06y3"]
+[ext_resource type="Texture2D" uid="uid://cuh711381tagp" path="res://Textures/floor.png" id="4_fo5ed"]
+[ext_resource type="Texture2D" uid="uid://b613a8rsi78sr" path="res://Textures/ceil.png" id="5_fo5ed"]
+[ext_resource type="Script" uid="uid://b7ao85ov44exk" path="res://Scripts/game_manager.gd" id="6_gh8yj"]
+[ext_resource type="PackedScene" uid="uid://ine1lbbmy76i" path="res://Scenes/altar.tscn" id="8_5v1tr"]
+[ext_resource type="PackedScene" uid="uid://qnwfos5q47jo" path="res://Scenes/bone_collectible.tscn" id="8_k7acu"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_yp4wr"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_a02cp"]
+sky_material = SubResource("ProceduralSkyMaterial_yp4wr")
+
+[sub_resource type="Environment" id="Environment_go701"]
+background_mode = 2
+sky = SubResource("Sky_a02cp")
+fog_enabled = true
+fog_light_color = Color(0.47827393, 0.51421773, 0.56611866, 1)
+fog_light_energy = 1.2
+fog_density = 0.018
+adjustment_enabled = true
+adjustment_brightness = 0.85
+adjustment_contrast = 1.2
+adjustment_saturation = 0.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5a7ea"]
+albedo_texture = ExtResource("3_8j60k")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_go701"]
+albedo_texture = ExtResource("4_fo5ed")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5ukr8"]
+shading_mode = 2
+albedo_texture = ExtResource("5_fo5ed")
+
+[node name="World" type="Node3D" unique_id=20011112]
+script = ExtResource("6_gh8yj")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2134970215]
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+shadow_enabled = true
+shadow_normal_bias = 1.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1708069168]
+environment = SubResource("Environment_go701")
+
+[node name="Player" parent="." unique_id=801813319 instance=ExtResource("1_a02cp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.37300038, 0)
+stamina_drain_rate = 20.0
+
+[node name="Maze" type="Node3D" parent="." unique_id=909773917]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.03897, -1.1423073, -4.5723042)
+script = ExtResource("2_go701")
+cell_size = 4.5
+wall_material = SubResource("StandardMaterial3D_5a7ea")
+floor_material = SubResource("StandardMaterial3D_go701")
+ceiling_material = SubResource("StandardMaterial3D_5ukr8")
+ceiling_height = 6.0
+bone_scene = ExtResource("8_k7acu")
+altar_scene = ExtResource("8_5v1tr")
+book_min_graph_dist = 3
+
+[node name="Monster" parent="." unique_id=1303586895 instance=ExtResource("3_o06y3")]
