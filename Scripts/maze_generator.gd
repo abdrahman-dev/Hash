@@ -1,8 +1,8 @@
 extends Node3D
 
 
-@export var grid_width: int = 17
-@export var grid_height: int = 16
+@export var grid_width: int = 15
+@export var grid_height: int = 15
 @export var cell_size: float = 4.0
 
 # Exposed material slots — assign any StandardMaterial3D to replace
@@ -17,7 +17,7 @@ extends Node3D
 @export var bone_count: int = 6
 
 @export var altar_scene: PackedScene
-@export var altar_min_graph_distance := 12
+@export var altar_min_graph_distance := 8
 
 @export var book_min_graph_dist: int = 4
 @export var book_max_graph_dist: int = 12

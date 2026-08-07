@@ -51,6 +51,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 
 [node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=383924766]
 
+[node name="SpotLight3D" type="SpotLight3D" parent="CameraPivot/Camera3D" unique_id=454615788]
+light_energy = 3.0
+spot_range = 12.0
+
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=801917221]
 visible = false
 mesh = SubResource("CapsuleMesh_ql73s")

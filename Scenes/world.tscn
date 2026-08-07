@@ -25,9 +25,9 @@ fog_light_color = Color(0.47827393, 0.51421773, 0.56611866, 1)
 fog_light_energy = 1.2
 fog_density = 0.018
 adjustment_enabled = true
-adjustment_brightness = 0.85
+adjustment_brightness = 0.5
 adjustment_contrast = 1.2
-adjustment_saturation = 0.8
+adjustment_saturation = 1.5
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5a7ea"]
 albedo_texture = ExtResource("3_8j60k")
