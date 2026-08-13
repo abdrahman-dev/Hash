@@ -9,21 +9,23 @@
 [ext_resource type="Script" uid="uid://b7ao85ov44exk" path="res://Scripts/game_manager.gd" id="6_gh8yj"]
 [ext_resource type="PackedScene" uid="uid://ine1lbbmy76i" path="res://Scenes/altar.tscn" id="8_5v1tr"]
 [ext_resource type="PackedScene" uid="uid://qnwfos5q47jo" path="res://Scenes/bone_collectible.tscn" id="8_k7acu"]
+[ext_resource type="PackedScene" uid="uid://bcojyqesm80k3" path="res://Scenes/notes.tscn" id="9_0fj1v"]
+[ext_resource type="PackedScene" uid="uid://dywc6id45ifvj" path="res://Scenes/rat.tscn" id="10_rats"]
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_yp4wr"]
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_0fj1v"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
 ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
 
 [sub_resource type="Sky" id="Sky_a02cp"]
-sky_material = SubResource("ProceduralSkyMaterial_yp4wr")
+sky_material = SubResource("ProceduralSkyMaterial_0fj1v")
 
-[sub_resource type="Environment" id="Environment_go701"]
+[sub_resource type="Environment" id="Environment_ikia7"]
 background_mode = 2
 sky = SubResource("Sky_a02cp")
 fog_enabled = true
-fog_light_color = Color(0.47827393, 0.51421773, 0.56611866, 1)
+fog_light_color = Color(0.6204499, 0.6532144, 0.70417947, 1)
 fog_light_energy = 1.2
-fog_density = 0.018
+fog_density = 0.019
 adjustment_enabled = true
 adjustment_brightness = 0.5
 adjustment_contrast = 1.2
@@ -47,8 +49,8 @@ transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545
 shadow_enabled = true
 shadow_normal_bias = 1.0
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1708069168]
-environment = SubResource("Environment_go701")
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=500134299]
+environment = SubResource("Environment_ikia7")
 
 [node name="Player" parent="." unique_id=801813319 instance=ExtResource("1_a02cp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.37300038, 0)
@@ -65,5 +67,7 @@ ceiling_height = 6.0
 bone_scene = ExtResource("8_k7acu")
 altar_scene = ExtResource("8_5v1tr")
 book_min_graph_dist = 3
+note_scene = ExtResource("9_0fj1v")
+rat_scene = ExtResource("10_rats")
 
 [node name="Monster" parent="." unique_id=1303586895 instance=ExtResource("3_o06y3")]

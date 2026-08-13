@@ -39,8 +39,7 @@ shape = SubResource("SphereShape3D_ql73s")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1634906033]
 light_color = Color(0.7254902, 0, 0, 1)
-light_energy = 2.0
-omni_range = 3.0
+light_energy = 4.0
 
 [node name="Cube_001_Material_001_0" type="MeshInstance3D" parent="." unique_id=814539465]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.9117451, 0.090705335)

@@ -1,20 +1,20 @@
-# Release Checklist — HUSH v1.0.0
+# Release Checklist — HUSH v1.1.0
 
-Use this checklist to prepare and ship the first public release.
+Use this checklist to prepare and ship the current release.
 
 ## Code & Project
 
-- [ ] Project opens without errors in Godot 4.7
-- [ ] No missing resources or broken scene references
-- [ ] No debug `print()` statements left in release code
-- [ ] No TODO/FIXME items that block release
-- [ ] No secrets, API keys, or passwords committed
-- [ ] No editor cache files (`.godot/`) committed
-- [ ] `.gitignore` covers `.godot/`, exports, and editor files
+- [x] Project opens without errors in Godot 4.7
+- [x] No missing resources or broken scene references
+- [x] No debug `print()` statements left in release code
+- [x] No TODO/FIXME items that block release
+- [x] No secrets, API keys, or passwords committed
+- [x] No editor cache files (`.godot/`) committed
+- [x] `.gitignore` covers `.godot/`, exports, and editor files
 
 ## Windows Export
 
-- [ ] `export_presets.cfg` created with a **Windows Desktop** preset
+- [x] `export_presets.cfg` created with a **Windows Desktop** preset
 - [ ] Windows export template installed
 - [ ] Test build exported successfully
 - [ ] Exported `.exe` launches and runs on a clean machine
@@ -55,18 +55,18 @@ Use this checklist to prepare and ship the first public release.
 
 ## Version
 
-- [ ] `project.godot` has `config/version="1.0.0"`
-- [ ] `CHANGELOG.md` reflects v1.0.0
+- [ ] `project.godot` has `config/version="1.1.0"`
+- [x] `CHANGELOG.md` reflects v1.1.0
 - [ ] Game version string displayed correctly (if applicable)
 
 ## Git Tag
 
-- [ ] Tag the release commit: `git tag -a v1.0.0 -m "HUSH v1.0.0"`
-- [ ] Push the tag: `git push origin v1.0.0`
+- [ ] Tag the release commit: `git tag -a v1.1.0 -m "HUSH v1.1.0"`
+- [ ] Push the tag: `git push origin v1.1.0`
 
 ## GitHub Release
 
-- [ ] Create a GitHub release for `v1.0.0`
+- [ ] Create a GitHub release for `v1.1.0`
 - [ ] Attach Windows build (zip of `.exe` + `.pck`)
 - [ ] Attach source archive
 - [ ] Add screenshots to the release

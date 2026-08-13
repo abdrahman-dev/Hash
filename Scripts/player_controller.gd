@@ -60,6 +60,18 @@ var camera_pivot: Node3D
 var camera: Camera3D
 var footstep_player: AudioStreamPlayer3D
 var breath_audio: AudioStreamPlayer3D
+var flashlight: SpotLight3D
+var flashlight_audio: AudioStreamPlayer
+var note_paper_audio: AudioStreamPlayer
+var _flashlight_on: bool = true
+
+var interact_prompt: Label
+var interact_note: Node3D = null
+var _reading_ui: Control = null
+var _reading_open: bool = false
+
+const READING_UI_SCENE := "res://Scenes/reading_ui.tscn"
+const NOTE_PAPER_SOUND := "res://Sounds/papper.mp3"
 
 var _pivot_initial_pos: Vector3
 var _bob_time: float = 0.0
@@ -151,6 +163,47 @@ func _ensure_child_nodes():
 	else:
 		camera = camera_pivot.get_node("Camera")
 
+	if not has_node("CameraPivot/Camera3D/SpotLight3D"):
+		flashlight = SpotLight3D.new()
+		flashlight.name = "SpotLight3D"
+		flashlight.light_energy = 3.0
+		flashlight.spot_range = 12.0
+		flashlight.spot_angle = 45.0
+		flashlight.shadow_enabled = true
+		camera.add_child(flashlight)
+	else:
+		flashlight = $CameraPivot/Camera3D/SpotLight3D
+		# Reparent the flashlight onto the runtime viewpoint camera so the beam
+		# inherits the exact view transform (look, bob, lean, sway, shake).
+		if flashlight.get_parent() != camera:
+			var flashlight_transform := flashlight.transform
+			var old_parent := flashlight.get_parent()
+			if old_parent:
+				old_parent.remove_child(flashlight)
+			camera.add_child(flashlight)
+			flashlight.transform = flashlight_transform
+	_flashlight_on = flashlight.visible
+
+	flashlight_audio = get_node_or_null("Flashlight") as AudioStreamPlayer
+	note_paper_audio = get_node_or_null("Notepapper") as AudioStreamPlayer
+	if note_paper_audio:
+		note_paper_audio.process_mode = Node.PROCESS_MODE_ALWAYS
+	if note_paper_audio and note_paper_audio.stream == null:
+		note_paper_audio.stream = load(NOTE_PAPER_SOUND)
+
+	var gameui := get_node_or_null("GameUI") as CanvasLayer
+	if gameui:
+		interact_prompt = gameui.get_node_or_null("InteractPrompt") as Label
+	if not interact_prompt:
+		interact_prompt = Label.new()
+		interact_prompt.name = "InteractPrompt"
+		interact_prompt.text = "[E] Read"
+		interact_prompt.visible = false
+		interact_prompt.add_theme_font_size_override("font_size", 24)
+		interact_prompt.add_theme_color_override("font_color", Color(0.6, 0.15, 0.15, 0.9))
+		if gameui:
+			gameui.add_child(interact_prompt)
+
 	if not has_node("Walking"):
 		footstep_player = AudioStreamPlayer3D.new()
 		footstep_player.name = "Walking"
@@ -200,6 +253,11 @@ func _unhandled_input(event: InputEvent):
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if Input.get_mouse_mode() == Input.MOUSE_MODE_VISIBLE:
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	elif event.is_action_pressed("flashlight_toggle"):
+		toggle_flashlight()
+	elif event.is_action_pressed("interact"):
+		if interact_note and not _reading_open:
+			_open_reading(interact_note)
 
 
 # Registers input actions so the script works without any project setup.
@@ -210,6 +268,8 @@ func _setup_input_actions():
 		"move_left": [KEY_A, KEY_LEFT],
 		"move_right": [KEY_D, KEY_RIGHT],
 		"sprint": [KEY_SHIFT],
+		"flashlight_toggle": [KEY_F],
+		"interact": [KEY_E],
 	}
 	for action in actions:
 		if not InputMap.has_action(action):
@@ -218,6 +278,87 @@ func _setup_input_actions():
 				var event: InputEventKey = InputEventKey.new()
 				event.keycode = key
 				InputMap.action_add_event(action, event)
+
+
+func toggle_flashlight():
+	_flashlight_on = not _flashlight_on
+	if flashlight:
+		flashlight.visible = _flashlight_on
+		if flashlight_audio:
+			flashlight_audio.play()
+
+
+func is_flashlight_on() -> bool:
+	return _flashlight_on
+
+
+func set_interact_note(note: Node3D):
+	if note == null or _reading_open:
+		return
+	interact_note = note
+	if interact_prompt:
+		interact_prompt.visible = true
+
+
+func clear_interact_note(note: Node3D):
+	if interact_note != note:
+		return
+	interact_note = null
+	if interact_prompt:
+		interact_prompt.visible = false
+
+
+func _open_reading(note: Node):
+	if _reading_open:
+		return
+	var ui := _ensure_reading_ui()
+	if ui == null:
+		return
+	var title := ""
+	var body := ""
+	if note:
+		title = str(note.get("note_title"))
+		body = str(note.get("note_text"))
+	ui.show_note(title, body)
+	if note_paper_audio:
+		note_paper_audio.play()
+	_reading_open = true
+	if interact_prompt:
+		interact_prompt.visible = false
+	get_tree().paused = true
+
+
+func _close_reading():
+	if not _reading_open:
+		return
+	_reading_open = false
+	if is_instance_valid(_reading_ui):
+		_reading_ui.visible = false
+	get_tree().paused = false
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	if interact_prompt and interact_note:
+		interact_prompt.visible = true
+
+
+func _ensure_reading_ui() -> Control:
+	if is_instance_valid(_reading_ui):
+		return _reading_ui
+	var scn: PackedScene = load(READING_UI_SCENE)
+	if scn == null:
+		return null
+	var ui := scn.instantiate() as Control
+	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var gameui := get_node_or_null("GameUI") as CanvasLayer
+	if gameui:
+		gameui.add_child(ui)
+		var uishader := gameui.get_node_or_null("UIShader")
+		if uishader:
+			gameui.move_child(ui, uishader.get_index())
+		if ui.has_signal("close_requested"):
+			ui.close_requested.connect(_close_reading)
+		_reading_ui = ui
+		return ui
+	return null
 
 
 func _notification(what: int):
@@ -509,6 +650,10 @@ func respawn():
 	_fov_trauma = 0.0
 	_shake_time = 0.0
 	_camera_rest_rotation = Vector3.ZERO
+
+	_flashlight_on = true
+	if flashlight:
+		flashlight.visible = true
 
 	_bob_time = 0.0
 	_bob_weight = 0.0

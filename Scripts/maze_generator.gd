@@ -22,11 +22,19 @@ extends Node3D
 @export var book_min_graph_dist: int = 4
 @export var book_max_graph_dist: int = 12
 
+@export var note_scene: PackedScene
+@export var note_count: int = 4
+@export var note_min_graph_distance: int = 4
+
+@export var rat_scene: PackedScene
+@export var rat_count: int = 3
+
 
 var _grid: Array  # 2D array of dicts: grid[y][x] = {"N":bool,"S":bool,"E":bool,"W":bool}
 var _spawn_cell: Vector2i
 var _exit_cell: Vector2i
 var _book_cells: Array[Vector2i] = []
+var _altar_cell: Vector2i = Vector2i(-1, -1)
 
 const WALL_THICKNESS: float = 0.2
 
@@ -39,6 +47,8 @@ func _ready():
 	regenerate_maze()
 	_spawn_bones()
 	_spawn_altar()
+	_spawn_notes()
+	_spawn_rats()
 
 
 func _init_materials():
@@ -544,8 +554,131 @@ func _spawn_altar():
 		chosen = preferred[randi() % preferred.size()]
 	else:
 		chosen = farthest
+	_altar_cell = chosen
 	var altar := altar_scene.instantiate() as Node3D
 	var pos := cell_to_world_position(chosen)
 	pos.y = 1.0
 	altar.position = pos
 	add_child(altar)
+
+
+# Selects the Note cells using farthest-point sampling over the maze graph.
+# Every candidate must be walkable and excluded hotspots: the player spawn,
+# any book cell, and the altar cell. Each Note is kept at least
+# note_min_graph_distance graph steps from every other Note, and the next cell
+# chosen is always the one that maximizes that minimum distance, which spreads
+# the Notes across different areas of the maze.
+func _select_note_cells() -> Array[Vector2i]:
+	var selected: Array[Vector2i] = []
+	if note_count <= 0:
+		return selected
+
+	var dist_from_spawn := _multi_source_bfs([_spawn_cell])
+	var candidates: Array[Vector2i] = []
+	for y in range(grid_height):
+		for x in range(grid_width):
+			var cell := Vector2i(x, y)
+			if dist_from_spawn[y][x] < 0:
+				continue
+			if cell == _spawn_cell:
+				continue
+			if _book_cells.has(cell):
+				continue
+			if cell == _altar_cell:
+				continue
+			candidates.append(cell)
+	if candidates.is_empty():
+		return selected
+
+	selected.append(_farthest_cell_from_set(candidates, [_spawn_cell]))
+	candidates.erase(selected[0])
+
+	while selected.size() < note_count and not candidates.is_empty():
+		var dist_from_set := _multi_source_bfs(selected)
+		var best_cell: Vector2i = Vector2i(-1, -1)
+		var best_min_dist := -1
+		for cell in candidates:
+			var d: int = dist_from_set[cell.y][cell.x]
+			if d < note_min_graph_distance:
+				continue
+			if d > best_min_dist:
+				best_min_dist = d
+				best_cell = cell
+		if best_cell.x == -1:
+			break
+		candidates.erase(best_cell)
+		selected.append(best_cell)
+
+	return selected
+
+
+func _farthest_cell_from_set(candidates: Array[Vector2i], seeds: Array[Vector2i]) -> Vector2i:
+	var dist := _multi_source_bfs(seeds)
+	var best: Vector2i = candidates[0]
+	var best_d := -1
+	for cell in candidates:
+		var d: int = dist[cell.y][cell.x]
+		if d > best_d:
+			best_d = d
+			best = cell
+	return best
+
+
+func _spawn_notes():
+	if not note_scene or note_count <= 0:
+		return
+
+	var container: Node3D = get_node_or_null("Notes") as Node3D
+	if container:
+		for child in container.get_children():
+			container.remove_child(child)
+			child.queue_free()
+	else:
+		container = Node3D.new()
+		container.name = "Notes"
+		add_child(container)
+
+	var selected := _select_note_cells()
+	var note_data := NoteData.get_randomized_notes()
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	for i in range(selected.size()):
+		var note := note_scene.instantiate() as Node3D
+		var pos := cell_to_world_position(selected[i])
+		pos.y = 0.35
+		note.position = pos
+		note.rotation_degrees.y = rng.randf_range(0.0, 360.0)
+		if i < note_data.size():
+			note.note_id = note_data[i]["id"]
+			note.note_title = note_data[i]["title"]
+			note.note_text = note_data[i]["body"]
+		container.add_child(note)
+
+
+# Spawns environmental Rats at random maze cells, following the same pattern
+# as bone spawning. Rats are decorative scurrying elements — they wander
+# randomly through the maze with no navigation and no combat.
+func _spawn_rats():
+	if not rat_scene or rat_count <= 0:
+		return
+
+	var container: Node3D = get_node_or_null("Rats") as Node3D
+	if container:
+		for child in container.get_children():
+			container.remove_child(child)
+			child.queue_free()
+	else:
+		container = Node3D.new()
+		container.name = "Rats"
+		add_child(container)
+
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	for i in range(rat_count):
+		var cell := Vector2i(rng.randi_range(0, grid_width - 1), rng.randi_range(0, grid_height - 1))
+		var pos := cell_to_world_position(cell)
+		pos.y = 0.0
+		var rat := rat_scene.instantiate()
+		rat.position = pos
+		rat.rotation_degrees.y = rng.randf_range(0.0, 360.0)
+		container.add_child(rat)

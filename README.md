@@ -9,7 +9,12 @@ A first-person survival horror game built with Godot 4.7. You are trapped inside
 - **Objective system** — collect all 6 cursed books scattered across the maze.
 - **Altar ritual** — stand at the altar for 5 seconds after collecting every book to win.
 - **Life system** — 3 lives; getting caught triggers a death sequence and respawn.
-- **Dynamic audio** — heartbeat picks up during a chase, monster screams, and ambient horror soundscape.
+- **Lore notes & Reading UI** — find lore notes scattered across the maze and read them through a paginated, typewriter-style paper UI.
+- **Randomized note placement/content** — note locations are sampled across the maze graph and note content is shuffled each run.
+- **Opening intro** — a wake-up sequence with a rising camera, typed inner monologue, and typing audio.
+- **Flashlight system** — toggleable flashlight with click audio.
+- **Environmental rats** — squeaking rats that wander the maze, flee when you get close, and play quiet positional sounds.
+- **Dynamic audio** — heartbeat picks up during a chase, monster footstep/scream layers, rat squeaks, page-flip/paper sounds, and ambient horror whispers.
 - **PSX-style visuals** — low-resolution post-processing shaders for a retro horror look.
 - **Full menu flow** — title screen, credits, in-game pause menu, game over and victory screens.
 
@@ -24,6 +29,8 @@ _TBD — screenshots will be added here for the first release._
 | Move          | `W` `A` `S` `D` |
 | Look around   | Mouse          |
 | Sprint        | `Shift`        |
+| Flashlight    | `F`            |
+| Read note     | `E`            |
 | Pause / Resume| `Esc`          |
 | Menu navigate | `Up` / `Down`  |
 | Menu confirm  | `Enter`        |
@@ -48,10 +55,9 @@ _TBD — screenshots will be added here for the first release._
 
 ### Windows export
 
-1. Open **Project > Export** in the editor.
-2. Create a **Windows Desktop** preset (this repo does not ship an `export_presets.cfg`).
-3. Add a Windows export template (installed via the editor's template manager).
-4. Click **Export Project** and choose an output folder.
+1. Open **Project > Export** in the editor (the repo ships an `export_presets.cfg` with a Windows Desktop preset).
+2. Make sure a Windows export template is installed (via the editor's template manager).
+3. Click **Export Project** and choose an output folder.
 
 ## Project Structure
 

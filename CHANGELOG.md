@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-08-13
+
+### Added
+
+- **Lore notes & Reading UI** (`note.gd`, `note_data.gd`, `notes.tscn`, `reading_ui.gd`): 4 lore notes placed at maze cells and readable through a paginated paper UI opened with the interaction prompt.
+- **Randomized note placement/content**: note cells are chosen via farthest-point sampling over the maze graph, and note content is shuffled each run.
+- **Opening wake-up intro** (`intro_controller.gd`): a rising-camera sequence with a typed inner monologue and typing audio before the player takes control.
+- **Flashlight system**: toggleable flashlight with click audio and an opening hint.
+- **Note reading audio**: paper rustle on open and page-flip sounds when turning pages.
+- **Environmental rats** (`rat_controller.gd`, `rat.tscn`): 3 squeaking rats that wander the maze via AStar2D navigation, flee the player when close, and play quiet randomized positional squeaks.
+- **Expanded horror audio**: monster footstep and scream layers, chase heartbeat, and randomized ambient whisper clips that play around the player.
+
 ## [1.0.0] - 2026-08-01
 
 First public release.

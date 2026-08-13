@@ -374,7 +374,7 @@ func _pick_final_phase_target() -> Vector2i:
 		return altar_cell
 
 	var candidates: Array[int] = []
-	for id in _astar.get_points():
+	for id in _astar.get_point_ids():
 		var cell := Vector2i(id % _grid_width, id / _grid_width)
 		if cell == from_cell:
 			continue
@@ -384,7 +384,7 @@ func _pick_final_phase_target() -> Vector2i:
 			candidates.append(id)
 
 	if candidates.is_empty():
-		for id in _astar.get_points():
+		for id in _astar.get_point_ids():
 			var cell := Vector2i(id % _grid_width, id / _grid_width)
 			if cell == from_cell:
 				continue

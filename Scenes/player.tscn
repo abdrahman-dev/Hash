@@ -15,6 +15,11 @@
 [ext_resource type="Shader" uid="uid://b2sdflpberqk4" path="res://shaders/psxshader_ui.gdshader" id="10_tm6l"]
 [ext_resource type="Script" uid="uid://clwxyc8uaktqv" path="res://Scripts/lives_ui.gd" id="11_tm6l"]
 [ext_resource type="Script" uid="uid://dmjsor84cdit2" path="res://Scripts/pause_menu.gd" id="12_pm"]
+[ext_resource type="AudioStream" uid="uid://sc01dptqx8f0" path="res://Sounds/flashlight.mp3" id="16_fd4e3"]
+[ext_resource type="AudioStream" uid="uid://cign3n333ko4n" path="res://Sounds/papper.mp3" id="17_qqcod"]
+[ext_resource type="AudioStream" uid="uid://qhesb4j1tfh7" path="res://Sounds/pageflip.mp3" id="18_igrcy"]
+[ext_resource type="AudioStream" uid="uid://dxf74irsafcn2" path="res://Sounds/textblip.mp3" id="19_fs7ks"]
+[ext_resource type="Script" uid="uid://dynnrhh0grefo" path="res://Scripts/intro_controller.gd" id="19_intro"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_ql73s"]
 
@@ -41,8 +46,9 @@ shader_parameter/grain_strength = 0.006
 
 [node name="Player" type="CharacterBody3D" unique_id=801813319]
 script = ExtResource("1_v0iea")
-stamina_drain_rate = 15.0
-stamina_recover_rate = 15.0
+run_speed = 11.26
+stamina_drain_rate = 0.0
+stamina_recover_rate = 100.0
 lean_angle = 2.2
 lean_speed = 7.0
 
@@ -52,8 +58,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 [node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=383924766]
 
 [node name="SpotLight3D" type="SpotLight3D" parent="CameraPivot/Camera3D" unique_id=454615788]
-light_energy = 3.0
-spot_range = 12.0
+light_energy = 4.0
+spot_range = 16.0
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=801917221]
 visible = false
@@ -136,6 +142,25 @@ text = "LIVES
 horizontal_alignment = 2
 script = ExtResource("11_tm6l")
 
+[node name="InteractPrompt" type="Label" parent="GameUI" unique_id=-2050298485]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -90.0
+offset_right = 200.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.6, 0.15, 0.15, 0.9)
+theme_override_font_sizes/font_size = 24
+text = "[E] Read"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="UIShader" type="ColorRect" parent="GameUI" unique_id=2047728072]
 material = SubResource("ShaderMaterial_uishader")
 anchors_preset = 15
@@ -156,3 +181,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("12_pm")
+
+[node name="Flashlight" type="AudioStreamPlayer" parent="." unique_id=476652975]
+stream = ExtResource("16_fd4e3")
+
+[node name="Notepapper" type="AudioStreamPlayer" parent="." unique_id=492026335]
+stream = ExtResource("17_qqcod")
+
+[node name="Pageflip" type="AudioStreamPlayer" parent="." unique_id=323075441]
+stream = ExtResource("18_igrcy")
+
+[node name="IntroController" type="Node" parent="." unique_id=1223653056]
+script = ExtResource("19_intro")
+
+[node name="Typing" type="AudioStreamPlayer" parent="." unique_id=1651736586]
+stream = ExtResource("19_fs7ks")

@@ -1,0 +1,69 @@
+[gd_scene format=3 uid="uid://d4f8a1oa07t2"]
+
+[ext_resource type="Script" uid="uid://dcfgafthfsfxu" path="res://Scripts/reading_ui.gd" id="2_rui"]
+[ext_resource type="Texture2D" uid="uid://ta16ck73hm0q" path="res://Textures/oldnotes.png" id="1_paper"]
+
+[node name="ReadingUI" type="Control" unique_id=1701412565]
+process_mode = 3
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_rui")
+
+[node name="Paper" type="TextureRect" parent="." unique_id=1886714951]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -324.0
+offset_top = -243.0
+offset_right = 324.0
+offset_bottom = 243.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_paper")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Title" type="Label" parent="Paper" unique_id=1266494500]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 46.0
+offset_right = 600.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(0.2, 0.13, 0.06, 1)
+theme_override_font_sizes/font_size = 40
+text = "Test Note"
+horizontal_alignment = 1
+
+[node name="Body" type="Label" parent="Paper" unique_id=581178129]
+layout_mode = 0
+offset_left = 56.0
+offset_top = 130.0
+offset_right = 592.0
+offset_bottom = 420.0
+theme_override_colors/font_color = Color(0.18, 0.12, 0.05, 1)
+theme_override_font_sizes/font_size = 22
+text = "This is a temporary test document.
+The actual HUSH lore will be added later."
+autowrap_mode = 3
+
+[node name="CloseHint" type="Label" parent="Paper" unique_id=695478224]
+layout_mode = 0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 200.0
+offset_top = -62.0
+offset_right = 448.0
+offset_bottom = -30.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.28, 0.18, 0.08, 0.85)
+theme_override_font_sizes/font_size = 18
+text = "[E] Close"
+horizontal_alignment = 1
