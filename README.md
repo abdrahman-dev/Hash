@@ -1,4 +1,4 @@
-# HUSH
+# REMNANT
 
 A first-person survival horror game built with Godot 4.7. You are trapped inside a procedurally generated maze while a monster hunts you. Collect the six cursed books and complete the ritual at the altar to lift the curse.
 

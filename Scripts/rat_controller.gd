@@ -48,6 +48,10 @@ var _astar: AStar2D
 var _grid_width := 0
 var _grid_height := 0
 
+# Idle pause between wander destinations, so each rat waits a random amount of
+# time before moving again — makes them feel independent.
+var _wander_pause := 0.0
+
 var _path: Array[Vector3] = []
 var _path_index := 0
 var _last_cell := Vector2i(999999, 999999)
@@ -76,11 +80,21 @@ func _ready():
 	_setup_forward()
 	_build_navigation()
 
+	# Stagger each rat's first move so they don't all start moving together.
+	await get_tree().create_timer(randf_range(0.5, 3.0)).timeout
 	_pick_destination()
 
 
 func _physics_process(delta: float):
 	position.y = 0.0
+
+	if _wander_pause > 0.0:
+		_wander_pause -= delta
+		velocity = Vector3.ZERO
+		move_and_slide()
+		if _wander_pause <= 0.0:
+			_pick_destination()
+		return
 
 	_tick_sounds(delta)
 	_check_fear()
@@ -128,7 +142,10 @@ func _move_to_target():
 	to_target.y = 0.0
 
 	if to_target.length_squared() < ARRIVE_DIST * ARRIVE_DIST:
-		_pick_destination()
+		if not _fleeing:
+			_wander_pause = randf_range(1.5, 4.5)
+		else:
+			_pick_destination()
 		return
 
 	var dir := to_target.normalized()
@@ -141,6 +158,8 @@ func _pick_destination():
 	if not _astar:
 		_pick_fallback_destination()
 		return
+
+	_wander_pause = 0.0
 
 	if _fleeing:
 		var player := _get_player()

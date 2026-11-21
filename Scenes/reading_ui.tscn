@@ -1,11 +1,11 @@
 [gd_scene format=3 uid="uid://d4f8a1oa07t2"]
 
-[ext_resource type="Script" uid="uid://dcfgafthfsfxu" path="res://Scripts/reading_ui.gd" id="2_rui"]
 [ext_resource type="Texture2D" uid="uid://ta16ck73hm0q" path="res://Textures/oldnotes.png" id="1_paper"]
+[ext_resource type="Script" uid="uid://dcfgafthfsfxu" path="res://Scripts/reading_ui.gd" id="2_rui"]
+[ext_resource type="FontFile" uid="uid://dwaq21ynbw5kv" path="res://Fonts/IMFellEnglish-Regular.ttf" id="3_font"]
 
 [node name="ReadingUI" type="Control" unique_id=1701412565]
 process_mode = 3
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,6 +38,7 @@ offset_top = 46.0
 offset_right = 600.0
 offset_bottom = 120.0
 theme_override_colors/font_color = Color(0.2, 0.13, 0.06, 1)
+theme_override_fonts/font = ExtResource("3_font")
 theme_override_font_sizes/font_size = 40
 text = "Test Note"
 horizontal_alignment = 1
@@ -49,9 +50,10 @@ offset_top = 130.0
 offset_right = 592.0
 offset_bottom = 420.0
 theme_override_colors/font_color = Color(0.18, 0.12, 0.05, 1)
+theme_override_fonts/font = ExtResource("3_font")
 theme_override_font_sizes/font_size = 22
 text = "This is a temporary test document.
-The actual HUSH lore will be added later."
+The actual REMNANT lore will be added later."
 autowrap_mode = 3
 
 [node name="CloseHint" type="Label" parent="Paper" unique_id=695478224]
@@ -64,6 +66,7 @@ offset_right = 448.0
 offset_bottom = -30.0
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.28, 0.18, 0.08, 0.85)
+theme_override_fonts/font = ExtResource("3_font")
 theme_override_font_sizes/font_size = 18
 text = "[E] Close"
 horizontal_alignment = 1

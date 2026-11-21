@@ -1,4 +1,4 @@
-# Release Checklist — HUSH v1.1.0
+# Release Checklist — REMNANT v1.1.0
 
 Use this checklist to prepare and ship the current release.
 
@@ -61,7 +61,7 @@ Use this checklist to prepare and ship the current release.
 
 ## Git Tag
 
-- [ ] Tag the release commit: `git tag -a v1.1.0 -m "HUSH v1.1.0"`
+- [ ] Tag the release commit: `git tag -a v1.1.0 -m "REMNANT v1.1.0"`
 - [ ] Push the tag: `git push origin v1.1.0`
 
 ## GitHub Release

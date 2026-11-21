@@ -23,7 +23,7 @@ const CHAR_DELAY := 0.05
 const LINE_HOLD := 0.9
 
 const HINT_TEXT := "Press F to turn on the flashlight."
-const HINT_DURATION := 1.0
+const HINT_DURATION := 3.0
 
 const TEXT_COLOR := Color(0.65, 0.05, 0.05, 1.0)
 const TYPING_VOLUME_DB := -12.0
@@ -81,6 +81,7 @@ func _build_label():
 	_label.visible = false
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	_label.add_theme_font_override("font", preload("res://Fonts/IMFellEnglish-Regular.ttf"))
 	_label.add_theme_font_size_override("font_size", 30)
 	_label.add_theme_color_override("font_color", TEXT_COLOR)
 	_gameui.add_child(_label)
@@ -197,6 +198,8 @@ func _process_typing(delta: float):
 
 
 func _finish_text():
+	if _typing and _typing.playing:
+		_typing.stop()
 	if _label:
 		_label.visible = false
 		_label.text = ""
@@ -239,6 +242,7 @@ func _disable_stream_loop(player: AudioStreamPlayer) -> void:
 
 func _play_typing():
 	if _typing and _typing.stream:
+		_typing.stop()
 		_typing.play()
 
 

@@ -1,0 +1,163 @@
+[gd_scene format=3 uid="uid://b1uruvrxbytqd"]
+
+[ext_resource type="Script" uid="uid://d01srl805jsuu" path="res://Scripts/mary_ui.gd" id="1_mu"]
+[ext_resource type="Texture2D" uid="uid://ta16ck73hm0q" path="res://Textures/oldnotes.png" id="2_paper"]
+[ext_resource type="Texture2D" uid="uid://br545lgdplra0" path="res://Textures/Letters/M.png" id="3_letter_m"]
+[ext_resource type="FontFile" uid="uid://dwaq21ynbw5kv" path="res://Fonts/IMFellEnglish-Regular.ttf" id="4_font"]
+
+[node name="MaryUI" type="Control" unique_id=1125554892]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_mu")
+
+[node name="Paper" type="TextureRect" parent="." unique_id=454966286]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -324.0
+offset_top = -243.0
+offset_right = 324.0
+offset_bottom = 243.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_paper")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Prompt" type="Label" parent="Paper" unique_id=1721508759]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 36.0
+offset_right = 600.0
+offset_bottom = 92.0
+theme_override_colors/font_color = Color(0.2, 0.13, 0.06, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 28
+text = "Write her name..."
+horizontal_alignment = 1
+
+[node name="LetterM" type="TextureRect" parent="Paper" unique_id=1538056057]
+layout_mode = 0
+offset_left = 134.0
+offset_top = 203.0
+offset_right = 214.0
+offset_bottom = 283.0
+mouse_filter = 2
+texture = ExtResource("3_letter_m")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Slot1" type="TextureRect" parent="Paper" unique_id=1345195839]
+layout_mode = 0
+offset_left = 234.0
+offset_top = 203.0
+offset_right = 314.0
+offset_bottom = 283.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Slot1/Underline" type="ColorRect" parent="Paper/Slot1" unique_id=1420385795]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -6.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+color = Color(0.28, 0.18, 0.08, 0.45)
+
+[node name="Slot2" type="TextureRect" parent="Paper" unique_id=81453858]
+layout_mode = 0
+offset_left = 334.0
+offset_top = 203.0
+offset_right = 414.0
+offset_bottom = 283.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Slot2/Underline" type="ColorRect" parent="Paper/Slot2" unique_id=1461864656]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -6.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+color = Color(0.28, 0.18, 0.08, 0.45)
+
+[node name="Slot3" type="TextureRect" parent="Paper" unique_id=1065369800]
+layout_mode = 0
+offset_left = 434.0
+offset_top = 203.0
+offset_right = 514.0
+offset_bottom = 283.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Slot3/Underline" type="ColorRect" parent="Paper/Slot3" unique_id=21685671]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -6.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+color = Color(0.28, 0.18, 0.08, 0.45)
+
+[node name="AttemptsLabel" type="Label" parent="Paper" unique_id=1623623123]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 124.0
+offset_top = -108.0
+offset_right = -124.0
+offset_bottom = -76.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.28, 0.18, 0.08, 0.9)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 18
+text = "Stabs remaining: 4"
+horizontal_alignment = 1
+
+[node name="CloseHint" type="Label" parent="Paper" unique_id=1688003091]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 200.0
+offset_top = -62.0
+offset_right = -200.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.28, 0.18, 0.08, 0.85)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 18
+text = "[E] Close"
+horizontal_alignment = 1

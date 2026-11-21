@@ -27,7 +27,7 @@ fog_light_color = Color(0.6204499, 0.6532144, 0.70417947, 1)
 fog_light_energy = 1.2
 fog_density = 0.019
 adjustment_enabled = true
-adjustment_brightness = 0.5
+adjustment_brightness = 0.4
 adjustment_contrast = 1.2
 adjustment_saturation = 1.5
 
@@ -69,5 +69,6 @@ altar_scene = ExtResource("8_5v1tr")
 book_min_graph_dist = 3
 note_scene = ExtResource("9_0fj1v")
 rat_scene = ExtResource("10_rats")
+rat_count = 9
 
 [node name="Monster" parent="." unique_id=1303586895 instance=ExtResource("3_o06y3")]

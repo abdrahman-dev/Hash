@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://bgu7mvmsj66vb"]
+
+[ext_resource type="Script" uid="uid://dmtsay6m2m6qv" path="res://Scripts/mary_note.gd" id="1_6e4tr"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ql73s"]
+size = Vector3(1.5, 1, 0.2)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_ql73s"]
+radius = 1.353658
+
+[node name="bloodmessage" type="Node3D" unique_id=763745902]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1780937658]
+mesh = SubResource("BoxMesh_ql73s")
+
+[node name="Area3D" type="Area3D" parent="." unique_id=691272421]
+script = ExtResource("1_6e4tr")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=421450355]
+shape = SubResource("SphereShape3D_ql73s")

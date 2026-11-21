@@ -10,12 +10,6 @@ signal player_caught
 
 const SCREAM_FADE_DURATION := 0.6
 
-# FINAL_PHASE altar patrol — active only after every book is collected.
-const FINAL_PHASE_BOOKS := 6
-const FINAL_PHASE_RING := Vector2(8.0, 12.0)
-const FINAL_PHASE_RITUAL_RING := Vector2(5.0, 7.0)
-const FINAL_PHASE_CROSS_CHANCE := 0.2
-
 const DIFFICULTY_TABLE: Array[Dictionary] = [
 	{},
 	{},
@@ -26,7 +20,7 @@ const DIFFICULTY_TABLE: Array[Dictionary] = [
 	{"hunt_speed": 5.15, "wander_speed": 2.2, "detection_range": 12.0},
 ]
 
-@export var wander_interval: float = 4.0
+@export var wander_interval: float = 10.0
 @export var wander_speed: float = 1.8
 @export var hunt_speed: float = 5.0
 @export var target_player: NodePath
@@ -66,6 +60,7 @@ var _wander_target: Vector2i
 var _wander_pause_active: bool = false
 var _wander_timer: Timer
 var _wander_pause_timer: Timer
+var _last_wander_target: Vector2i = Vector2i(-1, -1)
 
 var wander_pause_range: Vector2 = Vector2(1.0, 2.0)
 var scream_duration: float = 2.8
@@ -90,8 +85,7 @@ var _scream_rng: RandomNumberGenerator
 var _footstep_audio: AudioStreamPlayer3D
 
 var _spawn_transform: Transform3D
-var _final_phase: bool = false
-var _altar_node: Node3D
+var _final_hunt_active: bool = false
 
 
 func _ready():
@@ -308,7 +302,7 @@ func _pick_wander_target() -> Vector2i:
 	var visited := {from_id: 0}
 	var queue: Array[int] = [from_id]
 	var frontier := 0
-	const MAX_STEPS := 4
+	const MAX_STEPS := 20
 
 	while frontier < queue.size():
 		var current_id: int = queue[frontier]
@@ -324,8 +318,16 @@ func _pick_wander_target() -> Vector2i:
 	var candidates: Array[int] = []
 	for id in visited:
 		var d := visited[id] as int
-		if d >= 2 and d <= MAX_STEPS:
-			candidates.append(id)
+		if d >= 6:
+			var cell := Vector2i(id % _grid_width, id / _grid_width)
+			if cell != _last_wander_target:
+				candidates.append(id)
+
+	if candidates.is_empty():
+		for id in visited:
+			var d := visited[id] as int
+			if d >= 4:
+				candidates.append(id)
 
 	if candidates.is_empty():
 		var conn := _astar.get_point_connections(from_id)
@@ -334,70 +336,8 @@ func _pick_wander_target() -> Vector2i:
 		candidates = conn.duplicate()
 
 	var chosen_id := candidates[randi() % candidates.size()]
-	return Vector2i(chosen_id % _grid_width, chosen_id / _grid_width)
-
-
-# FINAL_PHASE: caches the altar node spawned by the maze generator.
-func _find_altar() -> Node3D:
-	if _altar_node and is_instance_valid(_altar_node):
-		return _altar_node
-	if not _maze_gen or not is_instance_valid(_maze_gen):
-		return null
-	_altar_node = _maze_gen.get_node_or_null("Altar") as Node3D
-	return _altar_node
-
-
-# FINAL_PHASE: true while the player is performing the ritual (the altar locks
-# the player's controls via player_controller.set_ritual_locked).
-func _ritual_active() -> bool:
-	var player := get_node_or_null(target_player)
-	if not player:
-		return false
-	return bool(player.get("_ritual_locked"))
-
-
-# FINAL_PHASE: picks a patrol destination around the altar. The monster circles
-# the altar at 8-12 m by default and tightens to 5-7 m while the ritual runs,
-# occasionally targeting the altar cell so it visibly crosses the altar. All
-# candidates are real maze cells, so the AStar path stays valid.
-func _pick_final_phase_target() -> Vector2i:
-	var altar := _find_altar()
-	if not altar or not _astar:
-		return _pick_wander_target()
-
-	var from_cell := world_to_cell(global_position)
-	var altar_cell := world_to_cell(altar.global_position)
-	var altar_local: Vector3 = _maze_gen.to_local(altar.global_position)
-	var ring: Vector2 = FINAL_PHASE_RITUAL_RING if _ritual_active() else FINAL_PHASE_RING
-
-	if randf() < FINAL_PHASE_CROSS_CHANCE and altar_cell != from_cell:
-		return altar_cell
-
-	var candidates: Array[int] = []
-	for id in _astar.get_point_ids():
-		var cell := Vector2i(id % _grid_width, id / _grid_width)
-		if cell == from_cell:
-			continue
-		var world: Vector3 = _maze_gen.cell_to_world_position(cell)
-		var d := Vector2(world.x - altar_local.x, world.z - altar_local.z).length()
-		if d >= ring.x and d <= ring.y:
-			candidates.append(id)
-
-	if candidates.is_empty():
-		for id in _astar.get_point_ids():
-			var cell := Vector2i(id % _grid_width, id / _grid_width)
-			if cell == from_cell:
-				continue
-			var world: Vector3 = _maze_gen.cell_to_world_position(cell)
-			var d := Vector2(world.x - altar_local.x, world.z - altar_local.z).length()
-			if d >= ring.x:
-				candidates.append(id)
-
-	if candidates.is_empty():
-		return _pick_wander_target()
-
-	var chosen_id := candidates[randi() % candidates.size()]
-	return Vector2i(chosen_id % _grid_width, chosen_id / _grid_width)
+	_last_wander_target = Vector2i(chosen_id % _grid_width, chosen_id / _grid_width)
+	return _last_wander_target
 
 
 func _pick_new_wander_destination():
@@ -407,12 +347,13 @@ func _pick_new_wander_destination():
 		_wander_timer.start(randf_range(0.5, 1.0))
 		return
 	_wander_pause_active = false
-	if _final_phase:
-		_wander_target = _pick_final_phase_target()
-	else:
-		_wander_target = _pick_wander_target()
-	_wander_timer.start(randf_range(wander_interval * 0.7, wander_interval * 1.3))
+	_wander_target = _pick_wander_target()
 	_recalculate_path()
+	var path_len := _path.size()
+	var est_time: float = 0.0
+	if path_len > 1:
+		est_time = (path_len * _cell_size) / wander_speed
+	_wander_timer.start(max(wander_interval, est_time * 1.2))
 
 
 func _on_wander_pause_ended():
@@ -442,6 +383,8 @@ func _on_detection_timeout():
 		if current_state != State.HUNTING:
 			_enter_hunting()
 	elif current_state == State.HUNTING:
+		if _final_hunt_active:
+			return
 		_time_since_last_seen += detection_check_interval
 		if _time_since_last_seen >= give_up_delay:
 			_enter_idle()
@@ -499,13 +442,35 @@ func _start_scream():
 	scream_started.emit()
 
 
-# Force the final-phase escalation: scream + chase effects (camera shake via
-# scream_started, heartbeat spike via chase_started) when all books are found.
+# Retained as a no-op: the monster keeps its normal wander/hunt behavior
+# regardless of how many books have been collected.
 func trigger_final_phase():
+	pass
+
+
+# FINAL HUNT: triggered by game_manager._on_final_hunt_timeout() when the 60s
+# countdown expires. Cancels any current patrol state and locks the monster
+# into HUNTING for the rest of the run (until reset_final_hunt() on respawn).
+# No LOS or range checks — the monster simply knows where the player is and
+# re-paths there directly through the maze.
+func force_hunt_mode():
+	_final_hunt_active = true
+	_wander_timer.stop()
+	_wander_pause_timer.stop()
 	if current_state == State.HUNTING:
-		_start_scream()
+		if not _scream_active:
+			_start_scream()
 	else:
 		_enter_hunting()
+	_recalculate_path()
+
+
+# Clears the persistent hunt lock and restores the monster to its spawn
+# in IDLE/wander state. The game_manager re-arms the final-hunt timer on
+# respawn, so force_hunt_mode() is triggered again when it expires.
+func reset_final_hunt():
+	_final_hunt_active = false
+	reset_to_spawn()
 
 
 func _enter_idle():
@@ -547,7 +512,10 @@ func reset_to_spawn():
 		_wander_pause_timer.stop()
 	if _wander_timer:
 		_wander_timer.stop()
-	_pick_new_wander_destination()
+	if _final_hunt_active:
+		_enter_hunting()
+	else:
+		_pick_new_wander_destination()
 
 
 func set_difficulty(books: int):
@@ -556,7 +524,6 @@ func set_difficulty(books: int):
 		for key in DIFFICULTY_TABLE[i]:
 			set(key, DIFFICULTY_TABLE[i][key])
 	_apply_difficulty_timers()
-	_final_phase = books >= FINAL_PHASE_BOOKS
 
 
 func _apply_difficulty_timers():
@@ -742,14 +709,9 @@ func _face_movement_direction(delta: float):
 	rotation.y = lerp_angle(rotation.y, target_angle - _fwd_angle_offset, rotation_speed * delta)
 
 
-# FINAL_PHASE: the monster never stands still while guarding the altar, so
-# arrivals immediately pick the next patrol point instead of pausing.
 func _on_patrol_arrival():
-	if _final_phase:
-		_pick_new_wander_destination()
-	else:
-		_wander_pause_active = true
-		_wander_pause_timer.start(randf_range(wander_pause_range.x, wander_pause_range.y))
+	_wander_pause_active = true
+	_wander_pause_timer.start(randf_range(wander_pause_range.x, wander_pause_range.y))
 
 
 func _move_along_path():

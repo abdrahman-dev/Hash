@@ -1,0 +1,321 @@
+[gd_scene format=3 uid="uid://cdrdpgwoo6nuv"]
+
+[ext_resource type="Texture2D" uid="uid://cuh711381tagp" path="res://Textures/floor.png" id="2_fs11u"]
+[ext_resource type="PackedScene" uid="uid://dw2krx0y5jaen" path="res://Scenes/monster_intro.tscn" id="2_h1jg8"]
+[ext_resource type="Texture2D" uid="uid://32uv1p7dmo05" path="res://Textures/wall.png" id="3_fs11u"]
+[ext_resource type="Script" uid="uid://cvjjv65bsnfha" path="res://Scripts/main_menu_original.gd" id="4_mmo"]
+[ext_resource type="FontFile" uid="uid://dwaq21ynbw5kv" path="res://Fonts/IMFellEnglish-Regular.ttf" id="5_font"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_yp4wr"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_fs11u"]
+sky_material = SubResource("ProceduralSkyMaterial_yp4wr")
+
+[sub_resource type="Environment" id="Environment_go701"]
+background_mode = 2
+sky = SubResource("Sky_fs11u")
+fog_enabled = true
+fog_light_color = Color(0.6204499, 0.6532144, 0.70417947, 1)
+fog_light_energy = 3.76
+fog_density = 0.019
+adjustment_enabled = true
+adjustment_brightness = 0.35
+adjustment_contrast = 1.2
+adjustment_saturation = 1.5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dvjmn"]
+albedo_texture = ExtResource("2_fs11u")
+
+[sub_resource type="BoxMesh" id="BoxMesh_v0s4m"]
+size = Vector3(6, 0.2, 4.5)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_fs11u"]
+points = PackedVector3Array(3.0470226, 0.13806728, 2.2733617, -3.0470226, -0.14759105, -2.2971716, -3.0470226, 0.13806728, -2.2971716, 3.0470226, -0.14759105, -2.2971716, -3.0470226, -0.14759105, 2.2733617, -3.0470226, 0.13806728, 2.2733617, 3.0470226, 0.13806728, -2.2971716, 3.0470226, -0.14759105, 2.2733617)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ixhl5"]
+albedo_texture = ExtResource("3_fs11u")
+
+[sub_resource type="BoxMesh" id="BoxMesh_oeq8l"]
+size = Vector3(6, 8.485, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h58pj"]
+albedo_texture = ExtResource("3_fs11u")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_newgame"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+bg_color = Color(0.05, 0.05, 0.05, 0.45)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_settings"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+bg_color = Color(0.05, 0.05, 0.05, 0.45)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_credits"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+bg_color = Color(0.05, 0.05, 0.05, 0.45)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_exit"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+bg_color = Color(0.05, 0.05, 0.05, 0.45)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="Animation" id="Animation_h1jg8"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Camera3D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(-0.31115252, -1.4709044, -0.030675044)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Camera3D:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(-3.0290017, 1.8945456, -1.9896071)]
+}
+
+[sub_resource type="Animation" id="Animation_mipx4"]
+resource_name = "intro"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Camera3D:rotation")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5, 1, 1.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(-0.31115252, -1.4709044, -0.030675046), Vector3(-0.11266782, -1.4751073, -0.010790822), Vector3(-0.2516144, -1.4991482, -0.016997486), Vector3(-0.048640132, -1.5013257, -0.0025138792)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Camera3D:position")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.5, 1, 1.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(-3.0290017, 1.8945456, -1.9896071), Vector3(-2.5526552, 1.3533206, -1.0881224), Vector3(-2.4817886, 1.6662726, -1.1547949), Vector3(-2.4817886, 1.3582551, -1.0260353)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_b4oe4"]
+_data = {
+&"RESET": SubResource("Animation_h1jg8"),
+&"intro": SubResource("Animation_mipx4")
+}
+
+[node name="World" type="Node3D" unique_id=557954501]
+script = ExtResource("4_mmo")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=328348532]
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=2024014176]
+environment = SubResource("Environment_go701")
+
+[node name="MonsterIntro" parent="." unique_id=386856254 instance=ExtResource("2_h1jg8")]
+transform = Transform3D(1.65, 0, 0, 0, 1.65, 0, 0, 0, 1.65, 0.076541185, 0.25314236, -0.90213454)
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=732235229]
+transform = Transform3D(0.09033594, 0.30754507, -0.94723564, -0.029197486, 0.95153344, 0.30615598, 0.9954831, 1.3038515e-08, 0.09493722, -3.0290017, 1.8945456, -1.9896071)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1196107094]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.34052324, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" unique_id=1561573188]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.2121717, 0)
+material_override = SubResource("StandardMaterial3D_dvjmn")
+mesh = SubResource("BoxMesh_v0s4m")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=1030012065]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.2121717, 0)
+shape = SubResource("ConvexPolygonShape3D_fs11u")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="StaticBody3D" unique_id=72909872]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.2121717, 4.468611)
+material_override = SubResource("StandardMaterial3D_dvjmn")
+mesh = SubResource("BoxMesh_v0s4m")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="StaticBody3D" unique_id=891176811]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.2121717, -4.429922)
+material_override = SubResource("StandardMaterial3D_dvjmn")
+mesh = SubResource("BoxMesh_v0s4m")
+
+[node name="MeshInstance3D8" type="MeshInstance3D" parent="StaticBody3D" unique_id=1755229962]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.3364525, -4.429922)
+material_override = SubResource("StandardMaterial3D_dvjmn")
+mesh = SubResource("BoxMesh_v0s4m")
+
+[node name="MeshInstance3D9" type="MeshInstance3D" parent="StaticBody3D" unique_id=1198838116]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.3364525, -0.06655741)
+material_override = SubResource("StandardMaterial3D_dvjmn")
+mesh = SubResource("BoxMesh_v0s4m")
+
+[node name="MeshInstance3D10" type="MeshInstance3D" parent="StaticBody3D" unique_id=1552362246]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.3364525, 3.6219392)
+material_override = SubResource("StandardMaterial3D_dvjmn")
+mesh = SubResource("BoxMesh_v0s4m")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="StaticBody3D" unique_id=1265341038]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 2.9205303, 1.1827345, -3.6872516)
+material_override = SubResource("StandardMaterial3D_ixhl5")
+mesh = SubResource("BoxMesh_oeq8l")
+
+[node name="MeshInstance3D7" type="MeshInstance3D" parent="StaticBody3D" unique_id=1835253867]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.213, 1.16, -6.234)
+material_override = SubResource("StandardMaterial3D_ixhl5")
+mesh = SubResource("BoxMesh_oeq8l")
+
+[node name="MeshInstance3D5" type="MeshInstance3D" parent="StaticBody3D" unique_id=456469010]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 2.9205303, 1.1827345, 2.1593447)
+material_override = SubResource("StandardMaterial3D_h58pj")
+mesh = SubResource("BoxMesh_oeq8l")
+
+[node name="MeshInstance3D6" type="MeshInstance3D" parent="StaticBody3D" unique_id=715419018]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 2.9205303, 1.1827345, 8.093791)
+material_override = SubResource("StandardMaterial3D_h58pj")
+mesh = SubResource("BoxMesh_oeq8l")
+
+[node name="SpotLight3D" type="SpotLight3D" parent="." unique_id=2129731413]
+transform = Transform3D(0.49629214, -0.11172747, -0.8609362, 0.05579884, 0.9937389, -0.096796274, 0.86636055, -1.927776e-08, 0.4994191, -2.0502326, 0.36873686, -0.81447995)
+light_color = Color(1, 0.76380324, 0.7249678, 1)
+light_energy = 10.44
+spot_range = 30.0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=94808577]
+
+[node name="TitleLabel" type="Label" parent="CanvasLayer" unique_id=770000001]
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 30.0
+offset_top = -221.0
+offset_right = 426.0
+offset_bottom = -128.0
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 72
+text = "REMNANT"
+
+[node name="StudioLabel" type="Label" parent="CanvasLayer" unique_id=770000002]
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 134.18
+offset_top = 122.0
+offset_right = 260.18
+offset_bottom = 143.0
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 16
+text = "DIMLIT GAMES"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer" unique_id=2024892779]
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 100.0
+offset_top = -126.0
+offset_right = 300.00006
+offset_bottom = 126.0
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="BtnNewGame" type="Button" parent="CanvasLayer/VBoxContainer" unique_id=1740583010]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_newgame")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_focus")
+theme_override_styles/hover = SubResource("StyleBoxFlat_newgame")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+text = "NEW GAME"
+
+[node name="BtnSettings" type="Button" parent="CanvasLayer/VBoxContainer" unique_id=741667359]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_settings")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_focus")
+theme_override_styles/hover = SubResource("StyleBoxFlat_settings")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+text = "SETTINGS"
+
+[node name="BtnCredits" type="Button" parent="CanvasLayer/VBoxContainer" unique_id=425054961]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_credits")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_focus")
+theme_override_styles/hover = SubResource("StyleBoxFlat_credits")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+text = "CREDITS"
+
+[node name="BtnExit" type="Button" parent="CanvasLayer/VBoxContainer" unique_id=1757223299]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_exit")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_focus")
+theme_override_styles/hover = SubResource("StyleBoxFlat_exit")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+text = "EXIT"
+
+[node name="Intro" type="AnimationPlayer" parent="." unique_id=1611227487]
+libraries/ = SubResource("AnimationLibrary_b4oe4")

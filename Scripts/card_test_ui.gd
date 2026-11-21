@@ -60,6 +60,7 @@ func _setup_layout():
 	_desc_label = Label.new()
 	_desc_label.name = "SharedDescLabel"
 	_desc_label.text = ""
+	_desc_label.add_theme_font_override("font", preload("res://Fonts/IMFellEnglish-Regular.ttf"))
 	_desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_desc_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD

@@ -20,6 +20,8 @@
 [ext_resource type="AudioStream" uid="uid://qhesb4j1tfh7" path="res://Sounds/pageflip.mp3" id="18_igrcy"]
 [ext_resource type="AudioStream" uid="uid://dxf74irsafcn2" path="res://Sounds/textblip.mp3" id="19_fs7ks"]
 [ext_resource type="Script" uid="uid://dynnrhh0grefo" path="res://Scripts/intro_controller.gd" id="19_intro"]
+[ext_resource type="FontFile" uid="uid://dwaq21ynbw5kv" path="res://Fonts/IMFellEnglish-Regular.ttf" id="20_font"]
+[ext_resource type="AudioStream" uid="uid://dlbsx36jjay3w" path="res://Sounds/deathscream.mp3" id="22_wpjfl"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_ql73s"]
 
@@ -34,6 +36,29 @@ shader_parameter/tint_strength = 0.25
 shader_parameter/scanline_strength = 0.15
 shader_parameter/scanline_count = 240.0
 shader_parameter/grain_strength = 0.06
+shader_parameter/color_depth = 32.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_empty"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0, 0, 0, 0.3)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fill"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.85, 0.1, 0.1, 0.8)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_uishader"]
 shader = ExtResource("10_tm6l")
@@ -43,12 +68,11 @@ shader_parameter/tint_strength = 0.04
 shader_parameter/scanline_strength = 0.015
 shader_parameter/scanline_count = 240.0
 shader_parameter/grain_strength = 0.006
+shader_parameter/color_depth = 48.0
 
 [node name="Player" type="CharacterBody3D" unique_id=801813319]
 script = ExtResource("1_v0iea")
-run_speed = 11.26
-stamina_drain_rate = 0.0
-stamina_recover_rate = 100.0
+stamina_recover_rate = 15.0
 lean_angle = 2.2
 lean_speed = 7.0
 
@@ -58,8 +82,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 [node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=383924766]
 
 [node name="SpotLight3D" type="SpotLight3D" parent="CameraPivot/Camera3D" unique_id=454615788]
-light_energy = 4.0
-spot_range = 16.0
+light_energy = 16.0
+spot_range = 50.0
+spot_angle = 35.0
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=801917221]
 visible = false
@@ -108,19 +133,47 @@ stream = ExtResource("10_pu2lt")
 [node name="GameUI" type="CanvasLayer" parent="." unique_id=1588839270]
 layer = 2
 
-[node name="StaminaCrosshairUI" type="Control" parent="GameUI" unique_id=2115969510]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+[node name="CrosshairDot" type="ColorRect" parent="GameUI" unique_id=2115969511]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 2.0
+offset_bottom = 2.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+color = Color(0.85, 0.1, 0.1, 1)
 script = ExtResource("3_6t5aa")
+
+[node name="StaminaBar" type="ProgressBar" parent="GameUI" unique_id=2115969512]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -90.0
+offset_top = -40.0
+offset_right = 90.0
+offset_bottom = -36.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_empty")
+theme_override_styles/fill = SubResource("StyleBoxFlat_fill")
+show_percentage = false
 
 [node name="BookUI" type="Label" parent="GameUI" unique_id=315107103]
 offset_left = 12.0
 offset_top = 12.0
+offset_right = 163.07
+offset_bottom = 73.365005
+scale = Vector2(1.33, 1.33)
 theme_override_colors/font_color = Color(0.6, 0.15, 0.15, 0.9)
+theme_override_fonts/font = ExtResource("20_font")
 theme_override_font_sizes/font_size = 18
 text = "CURSED BOOKS
 0 / 6"
@@ -136,6 +189,7 @@ offset_right = -13.13501
 offset_bottom = 57.135002
 grow_horizontal = 0
 theme_override_colors/font_color = Color(0.6, 0.15, 0.15, 0.9)
+theme_override_fonts/font = ExtResource("20_font")
 theme_override_font_sizes/font_size = 16
 text = "LIVES
      "
@@ -156,6 +210,7 @@ offset_bottom = -50.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.6, 0.15, 0.15, 0.9)
+theme_override_fonts/font = ExtResource("20_font")
 theme_override_font_sizes/font_size = 24
 text = "[E] Read"
 horizontal_alignment = 1
@@ -196,3 +251,6 @@ script = ExtResource("19_intro")
 
 [node name="Typing" type="AudioStreamPlayer" parent="." unique_id=1651736586]
 stream = ExtResource("19_fs7ks")
+
+[node name="dying" type="AudioStreamPlayer" parent="." unique_id=1849138957]
+stream = ExtResource("22_wpjfl")

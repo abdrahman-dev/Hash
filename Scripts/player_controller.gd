@@ -70,8 +70,19 @@ var interact_note: Node3D = null
 var _reading_ui: Control = null
 var _reading_open: bool = false
 
+var interact_knife: Node = null
+var interact_mary_note: Node = null
+var _mary_ui: Control = null
+var _knife_used: bool = false
+var _stab_count: int = 0
+var _write_attempts: int = 0
+var _writing_locked: bool = false
+
 const READING_UI_SCENE := "res://Scenes/reading_ui.tscn"
 const NOTE_PAPER_SOUND := "res://Sounds/papper.mp3"
+const MARY_UI_SCENE: String = "res://Scenes/mary_ui.tscn"
+const MAX_STABS: int = 3
+const MAX_WRITE_ATTEMPTS: int = 3
 
 var _pivot_initial_pos: Vector3
 var _bob_time: float = 0.0
@@ -87,6 +98,8 @@ var _fov_trauma: float = 0.0
 var _fov_default: float = 75.0
 
 var _control_locked: bool = false
+var _death_active: bool = false
+var _death_rig: DeathCam = null
 var _ritual_locked: bool = false
 var _heartbeat_player: AudioStreamPlayer
 var _heartbeat_active: bool = false
@@ -199,6 +212,7 @@ func _ensure_child_nodes():
 		interact_prompt.name = "InteractPrompt"
 		interact_prompt.text = "[E] Read"
 		interact_prompt.visible = false
+		interact_prompt.add_theme_font_override("font", preload("res://Fonts/IMFellEnglish-Regular.ttf"))
 		interact_prompt.add_theme_font_size_override("font_size", 24)
 		interact_prompt.add_theme_color_override("font_color", Color(0.6, 0.15, 0.15, 0.9))
 		if gameui:
@@ -242,8 +256,9 @@ func _input(event: InputEvent):
 	if _control_locked:
 		return
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-		rotate_y(deg_to_rad(-event.relative.x * mouse_sensitivity))
-		camera_pivot.rotate_x(deg_to_rad(-event.relative.y * mouse_sensitivity))
+		var sensitivity := mouse_sensitivity * GameState.mouse_sensitivity
+		rotate_y(deg_to_rad(-event.relative.x * sensitivity))
+		camera_pivot.rotate_x(deg_to_rad(-event.relative.y * sensitivity))
 		camera_pivot.rotation.x = clamp(camera_pivot.rotation.x, deg_to_rad(-80), deg_to_rad(80))
 
 
@@ -253,11 +268,15 @@ func _unhandled_input(event: InputEvent):
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if Input.get_mouse_mode() == Input.MOUSE_MODE_VISIBLE:
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	elif event.is_action_pressed("flashlight_toggle"):
+	elif not _control_locked and event.is_action_pressed("flashlight_toggle"):
 		toggle_flashlight()
 	elif event.is_action_pressed("interact"):
 		if interact_note and not _reading_open:
 			_open_reading(interact_note)
+		elif interact_knife and not _knife_used and _stab_count < MAX_STABS:
+			_use_knife()
+		elif interact_mary_note and _knife_used:
+			_open_mary_ui()
 
 
 # Registers input actions so the script works without any project setup.
@@ -296,8 +315,7 @@ func set_interact_note(note: Node3D):
 	if note == null or _reading_open:
 		return
 	interact_note = note
-	if interact_prompt:
-		interact_prompt.visible = true
+	_show_interact_prompt("[E] Read")
 
 
 func clear_interact_note(note: Node3D):
@@ -336,8 +354,8 @@ func _close_reading():
 		_reading_ui.visible = false
 	get_tree().paused = false
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	if interact_prompt and interact_note:
-		interact_prompt.visible = true
+	if interact_note:
+		_show_interact_prompt("[E] Read")
 
 
 func _ensure_reading_ui() -> Control:
@@ -361,12 +379,134 @@ func _ensure_reading_ui() -> Control:
 	return null
 
 
+func _show_interact_prompt(text: String) -> void:
+	if interact_prompt == null:
+		return
+	interact_prompt.text = text
+	interact_prompt.visible = true
+
+
+func _hide_interact_prompt() -> void:
+	if interact_prompt:
+		interact_prompt.visible = false
+
+
+func set_interact_knife(knife: Node) -> void:
+	interact_knife = knife
+	_show_interact_prompt("[E] Pick up")
+
+
+func clear_interact_knife(knife: Node) -> void:
+	if interact_knife == knife:
+		interact_knife = null
+		_hide_interact_prompt()
+
+
+func set_interact_mary_note(note: Node) -> void:
+	interact_mary_note = note
+	if _writing_locked:
+		return
+	if _knife_used:
+		_show_interact_prompt("[E] Write")
+
+
+func clear_interact_mary_note(note: Node) -> void:
+	if interact_mary_note == note:
+		interact_mary_note = null
+		_hide_interact_prompt()
+
+
+func _open_mary_ui() -> void:
+	if _writing_locked:
+		return
+	_ensure_mary_ui()
+	if _mary_ui == null:
+		return
+	_mary_ui.show_ui(_write_attempts)
+	get_tree().paused = true
+	_hide_interact_prompt()
+
+
+func _ensure_mary_ui() -> void:
+	if _mary_ui:
+		return
+	var scene := load(MARY_UI_SCENE) as PackedScene
+	if not scene:
+		return
+	_mary_ui = scene.instantiate() as Control
+	_mary_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var game_ui := get_node_or_null("GameUI") as CanvasLayer
+	if game_ui:
+		game_ui.add_child(_mary_ui)
+	_mary_ui.name_correct.connect(_on_mary_name_correct)
+	_mary_ui.name_wrong.connect(_on_mary_name_wrong)
+	_mary_ui.closed.connect(_on_mary_ui_closed)
+
+
+func _on_mary_name_correct() -> void:
+	get_tree().paused = false
+	_mary_ui.hide_ui()
+	_knife_used = false
+	# emit signal or call door open — to be wired later
+
+
+func _on_mary_name_wrong() -> void:
+	_write_attempts += 1
+	if _write_attempts >= MAX_WRITE_ATTEMPTS:
+		get_tree().paused = false
+		_mary_ui.hide_ui()
+		_knife_used = false
+		_write_attempts = 0
+		if interact_knife:
+			_show_interact_prompt("[E] Pick up knife again")
+		_writing_locked = true
+	# wrong feedback handled inside mary_ui (flash)
+
+
+func _on_mary_ui_closed() -> void:
+	get_tree().paused = false
+	_mary_ui.hide_ui()
+
+
+func _use_knife() -> void:
+	_stab_count += 1
+	_knife_used = true
+	_writing_locked = false
+	# play hurt sound
+	var audio := AudioStreamPlayer.new()
+	audio.stream = load("res://Sounds/hurt.mp3")
+	audio.volume_db = -5.0
+	add_child(audio)
+	audio.play()
+	audio.finished.connect(audio.queue_free)
+	# blood vignette — brief red flash on screen edges
+	_flash_blood_vignette()
+	_show_interact_prompt("[E] Write")
+
+
+func _flash_blood_vignette() -> void:
+	var cl := CanvasLayer.new()
+	cl.layer = 15
+	add_child(cl)
+	var rect := ColorRect.new()
+	rect.color = Color(0.6, 0.0, 0.0, 0.0)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	cl.add_child(rect)
+	var tw := create_tween()
+	tw.tween_property(rect, "color:a", 0.45, 0.1)
+	tw.tween_property(rect, "color:a", 0.0, 0.6)
+	tw.tween_callback(cl.queue_free)
+
+
 func _notification(what: int):
 	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 
 func _physics_process(delta: float):
+	if _death_active:
+		return
 	_apply_gravity(delta)
 
 	var input_dir: Vector2 = _get_input_dir()
@@ -628,9 +768,42 @@ func trigger_damage_effect():
 	tw.tween_callback(func():
 		if is_instance_valid(cl):
 			cl.queue_free()
-		_control_locked = false
+		if not _death_active:
+			_control_locked = false
 		damage_completed.emit()
 	)
+
+
+# Detaches the active camera into a self-cleaning death rig that jerks the head
+# back, tumbles it to the floor and screams. Returns the rig, or null if the
+# camera could not be detached. The rig snapshots the current view transform and
+# later reattaches the camera to CameraPivot before respawn.
+func begin_death_sequence(kill_dir: Vector3 = Vector3.FORWARD) -> DeathCam:
+	if _death_active:
+		return null
+	var world := get_tree().current_scene
+	if camera == null or camera.get_parent() == null or world == null:
+		return null
+
+	_control_locked = true
+	_death_active = true
+
+	var rig := DeathCam.new()
+	rig.name = "DeathCamRig"
+	rig.process_mode = Node.PROCESS_MODE_ALWAYS
+
+	var cam_transform := camera.global_transform
+	camera.get_parent().remove_child(camera)
+	rig.add_child(camera)
+	camera.position = Vector3.ZERO
+	camera.rotation = Vector3.ZERO
+	rig.transform = cam_transform
+
+	rig.setup(camera, kill_dir)
+	world.add_child(rig)
+
+	_death_rig = rig
+	return rig
 
 
 # Restores the player to its original spawn transform and resets all camera,
@@ -639,6 +812,8 @@ func respawn():
 	global_transform = _spawn_transform
 	velocity = Vector3.ZERO
 	_control_locked = false
+	_death_active = false
+	_death_rig = null
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 	camera_pivot.rotation = Vector3.ZERO

@@ -1,26 +1,25 @@
 class_name NoteData
 
-
 static var NOTES := [
 	{
 		"id": "note_01",
 		"title": "The Descent",
-		"body": "I found the entrance beneath the old ruins.\n\nThere is no record of this place. No name. No map.\nOnly a passage leading deeper into the earth.\n\nThe walls are covered in markings I cannot understand.\nSome of them look like prayers. Others look like warnings.\n\nI was told that the books were kept here.\n\nIf the stories are true, they can return what death has taken.\n\nBut nothing that brings back the dead comes without a price."
+		"body": "You were never meant to find this place.\n\nThere is no name for what lies beneath the ruins. No map leads here. No record remembers it.\n\nStill, the path was left open.\n\nThe walls remember those who came before you. Their words have faded, but the warnings remain.\n\nSix books are hidden below.\n\nDo not mistake them for books.\n\nThey were written for something that should not be remembered.\n\nIf you have already found one, the place has already noticed you.\n\nKeep going.\n\nYou have come too far to turn back now."
 	},
 	{
 		"id": "note_02",
 		"title": "The Hungry One",
-		"body": "I heard it again tonight.\n\nSomething moves through the passages when the lamps go dark.\nI never see it for more than a moment.\n\nIt does not speak.\n\nIt only watches.\n\nThe marks on the walls call it the Keeper.\nThey say it was once human, but I no longer believe that.\n\nIt guards the books.\n\nOr perhaps...\n\nit is waiting for someone to collect them."
+		"body": "You have seen it.\n\nPerhaps only a shape in the dark.\nPerhaps only two eyes between the walls.\n\nDo not wait for it to show itself again.\n\nThe old markings give it many names.\nThe oldest one calls it the Keeper.\n\nDo not believe the stories about what it was.\n\nIt no longer belongs to the world above.\n\nIt knows what you are looking for.\n\nIt knows why you came.\n\nAnd it will know when you have found enough.\n\nIf you hear it close behind you, do not look back.\n\nThe first mistake was looking for the books.\n\nThe second would be believing they are the only thing being collected."
 	},
 	{
 		"id": "note_03",
 		"title": "The Six Curses",
-		"body": "There are six books.\n\nEach one carries a fragment of the curse.\nThey must be gathered and placed upon the altar together.\n\nOnly then can the ritual begin.\n\nThe writings claim that death is not permanent.\nA soul can be called back.\n\nBut the ritual does not restore the dead as they were.\n\nSomething must remain behind.\n\nSomething must open the way.\n\nAnd something must be willing to return."
+		"body": "There are six.\n\nSix books.\nSix seals.\nSix pieces of something that was never meant to be whole again.\n\nThe markings beneath the ruins speak of an altar.\nThey speak of a door.\nThey speak of a voice calling from the other side.\n\nNone of them say what waits there.\n\nThat part was scratched away.\n\nOnly the warning remains:\n\nSomething must be left behind.\nSomething must open the way.\nAnd something must answer when it is called.\n\nIf all six books are gathered, the altar will know.\n\nSo will the thing beneath it.\n\nPerhaps that is why the Keeper is still here."
 	},
 	{
 		"id": "note_04",
 		"title": "Her Name",
-		"body": "I finally understood the markings.\n\nThe ritual was never meant to summon a stranger.\n\nIt was written for someone who had already been loved.\n\nSomeone whose body was lost, but whose soul remained beneath this place.\n\nI remember her now.\n\nHer voice.\nHer hands.\nThe way she used to laugh when I could not sleep.\n\nI remember the night she died.\n\nAnd I remember the book I found afterward.\n\nI thought it was only a story.\n\nIf the ritual is real...\n\nthen she may still be waiting for me."
+		"body": "You know the name.\n\nYou knew it before you entered these halls.\n\nThat is why this place opened for you.\n\nThat is why the markings appeared where you could see them.\n\nThat is why the books were left where your hands would eventually find them.\n\nYou may have forgotten the face.\nYou may have forgotten the voice.\n\nThe place has not.\n\nSomewhere beneath the stone, something is still waiting.\n\nDo not ask whether it is alive.\n\nDo not ask whether it remembers you.\n\nWhen the six books are brought to the altar, you will have your answer.\n\nAnd when the door opens...\n\nremember who called you here."
 	},
 ]
 

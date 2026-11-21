@@ -1,6 +1,8 @@
 extends Node3D
 
 
+signal ritual_completed
+
 const RITUAL_DURATION: float = 5.0
 
 @export var hint_display_time: float = 2.0
@@ -117,6 +119,7 @@ func _cancel_ritual():
 func _complete_ritual():
 	_ritual_active = false
 	_ritual_completed = true
+	ritual_completed.emit()
 	$RitualArea.monitoring = false
 	if _player and _player.has_method("set_ritual_locked"):
 		_player.set_ritual_locked(false)
@@ -191,6 +194,7 @@ func _show_hint():
 	label.text = "COLLECT ALL 6 CURSED BOOKS FIRST"
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.5))
+	label.add_theme_font_override("font", preload("res://Fonts/IMFellEnglish-Regular.ttf"))
 	label.add_theme_font_size_override("font_size", 20)
 	label.modulate.a = 0.0
 	center.add_child(label)
@@ -211,59 +215,9 @@ func _show_hint():
 
 
 func _show_victory():
-	get_tree().paused = true
-	var cl := CanvasLayer.new()
-	cl.name = "VictoryLayer"
-	cl.layer = 10
-	cl.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(cl)
-
-	var fade := ColorRect.new()
-	fade.name = "VictoryFade"
-	fade.color = Color(0, 0, 0, 0)
-	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	cl.add_child(fade)
-	fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var center := CenterContainer.new()
-	center.name = "VictoryCenter"
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	cl.add_child(center)
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var vbox := VBoxContainer.new()
-	vbox.name = "VictoryVBox"
-	center.add_child(vbox)
-
-	var title := Label.new()
-	title.name = "VictoryTitle"
-	title.text = "THE RITUAL IS COMPLETE"
-	title.visible = false
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_color_override("font_color", Color(0.9, 0.85, 0.5))
-	title.add_theme_font_size_override("font_size", 36)
-	vbox.add_child(title)
-
-	var subtitle := Label.new()
-	subtitle.name = "VictorySubtitle"
-	subtitle.text = "THE CURSE HAS BEEN LIFTED"
-	subtitle.visible = false
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_color_override("font_color", Color(0.9, 0.85, 0.5))
-	subtitle.add_theme_font_size_override("font_size", 20)
-	vbox.add_child(subtitle)
-
-	var tw := cl.create_tween()
-	tw.tween_property(fade, "color:a", 1.0, 0.8)
-	tw.tween_interval(0.5)
-	tw.tween_callback(func():
-		title.visible = true
-		subtitle.visible = true
-	)
-	tw.tween_interval(3.7)
-	tw.tween_callback(_end_victory)
+	_end_victory()
 
 
 func _end_victory():
 	get_tree().paused = false
-	get_tree().change_scene_to_file(GameState.MAIN_MENU_SCENE)
+	get_tree().change_scene_to_file("res://Scenes/endingmary.tscn")

@@ -449,45 +449,26 @@ func graph_distance_between(a: Vector2i, b: Vector2i) -> int:
 
 
 func _select_book_cells() -> Array[Vector2i]:
+	var dist_from_spawn := _multi_source_bfs([_spawn_cell])
 	var candidates: Array[Vector2i] = []
 	for y in range(grid_height):
 		for x in range(grid_width):
 			var cell := Vector2i(x, y)
+			if dist_from_spawn[y][x] < 0:
+				continue
 			if cell != _spawn_cell:
 				candidates.append(cell)
-	candidates.shuffle()
 
-	var selected: Array[Vector2i] = [candidates.pop_back()]
+	var selected: Array[Vector2i] = []
+	var seeds: Array[Vector2i] = [_spawn_cell]
 
-	while selected.size() < bone_count and not candidates.is_empty():
-		var dist_from_set := _multi_source_bfs(selected)
-		var valid: Array[Vector2i] = []
-		var closest_far: Vector2i = Vector2i(-1, -1)
-		var closest_far_d := 0x7fffffff
-		var furthest_near: Vector2i = Vector2i(-1, -1)
-		var furthest_near_d := -1
-
-		for cell in candidates:
-			var d: int = dist_from_set[cell.y][cell.x]
-			if d >= book_min_graph_dist and d <= book_max_graph_dist:
-				valid.append(cell)
-			elif d > book_max_graph_dist and d < closest_far_d:
-				closest_far_d = d
-				closest_far = cell
-			elif d < book_min_graph_dist and d > furthest_near_d:
-				furthest_near_d = d
-				furthest_near = cell
-
-		var chosen: Vector2i
-		if not valid.is_empty():
-			chosen = valid[randi() % valid.size()]
-		elif closest_far.x != -1:
-			chosen = closest_far
-		else:
-			chosen = furthest_near
-
-		candidates.erase(chosen)
-		selected.append(chosen)
+	for i in range(bone_count):
+		if candidates.is_empty():
+			break
+		var best := _farthest_cell_from_set(candidates, seeds)
+		selected.append(best)
+		seeds.append(best)
+		candidates.erase(best)
 
 	return selected
 
@@ -655,9 +636,10 @@ func _spawn_notes():
 		container.add_child(note)
 
 
-# Spawns environmental Rats at random maze cells, following the same pattern
-# as bone spawning. Rats are decorative scurrying elements — they wander
-# randomly through the maze with no navigation and no combat.
+# Spawns environmental Rats spread across the maze using the same farthest-point
+# sampling pattern as books/bones — each rat lands as far as possible from the
+# player spawn and every other rat, so they don't cluster together. Rats are
+# decorative scurrying elements — they wander randomly through the maze.
 func _spawn_rats():
 	if not rat_scene or rat_count <= 0:
 		return
@@ -672,11 +654,26 @@ func _spawn_rats():
 		container.name = "Rats"
 		add_child(container)
 
+	var dist_from_spawn := _multi_source_bfs([_spawn_cell])
+	var rat_candidates: Array[Vector2i] = []
+	for y in range(grid_height):
+		for x in range(grid_width):
+			var cell := Vector2i(x, y)
+			if dist_from_spawn[y][x] < 0:
+				continue
+			if cell != _spawn_cell:
+				rat_candidates.append(cell)
+
+	var rat_seeds: Array[Vector2i] = [_spawn_cell]
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
 	for i in range(rat_count):
-		var cell := Vector2i(rng.randi_range(0, grid_width - 1), rng.randi_range(0, grid_height - 1))
-		var pos := cell_to_world_position(cell)
+		if rat_candidates.is_empty():
+			break
+		var best := _farthest_cell_from_set(rat_candidates, rat_seeds)
+		rat_seeds.append(best)
+		rat_candidates.erase(best)
+		var pos := cell_to_world_position(best)
 		pos.y = 0.0
 		var rat := rat_scene.instantiate()
 		rat.position = pos
