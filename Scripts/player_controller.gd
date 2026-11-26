@@ -20,7 +20,7 @@ signal damage_completed
 
 @export var max_stamina: float = 100.0
 @export var stamina_drain_rate: float = 20.0
-@export var stamina_recover_rate: float = 12.0
+@export var stamina_recover_rate: float = 20.0
 @export var stamina_recover_threshold: float = 25.0
 
 @export var footstep_volume_idle: float = -80.0
@@ -48,9 +48,16 @@ signal damage_completed
 @export var damage_flash_color: Color = Color(0.6, 0.0, 0.0, 0.35)
 @export var damage_effect_duration: float = 0.4
 
+# --- flashlight wear ---
+@export var flicker_start_time: float = 180.0
+@export var flicker_max_time: float = 360.0
+@export var recovery_off_time: float = 20.0
+@export var min_brightness: float = 0.35
+@export var base_dim_amount: float = 0.15
+
 # --- humanizing movement feel ---
-@export var lean_angle: float = 4.0        # degrees of camera roll while strafing
-@export var lean_speed: float = 9.0        # how fast the lean eases in/out
+@export var lean_angle: float = 2.2        # degrees of camera roll while strafing
+@export var lean_speed: float = 7.0        # how fast the lean eases in/out
 @export var landing_bounce_strength: float = 0.06
 @export var landing_bounce_speed: float = 9.0
 
@@ -65,6 +72,39 @@ var flashlight_audio: AudioStreamPlayer
 var note_paper_audio: AudioStreamPlayer
 var _flashlight_on: bool = true
 
+const FLICKER_INTERVAL_START: float = 2.5
+const FLICKER_INTERVAL_END: float = 0.8
+const FLICKER_INTERVAL_JITTER: float = 0.25
+const FLICKER_DIP_FADE_TIME: float = 0.12
+const FLICKER_RECOVER_FADE_TIME: float = 0.30
+const FLICKER_FULL_RECOVERY_TIME: float = 1.5
+const FLICKER_CUTOUT_START_TIME: float = 270.0
+const FLICKER_CUTOUT_CHANCE: float = 0.08
+const FLICKER_RANGE_DIM: float = 0.15
+const FLICKER_CLICK_VOLUME_DB: float = -18.0
+const FLICKER_CLICK_CHANCE: float = 0.35
+
+var _flashlight_base_energy: float = 0.0
+var _flashlight_current_energy: float = 0.0
+var _flashlight_target_energy: float = 0.0
+var _flashlight_fade_target: float = 0.0
+var _flashlight_fade_speed: float = 0.0
+var _flashlight_base_range: float = 0.0
+var _flashlight_usage_time: float = 0.0
+var _flashlight_off_time: float = 0.0
+var _flashlight_flicker_started: bool = false
+var _flashlight_recovery_pending: bool = false
+var _flashlight_recovery_time_left: float = 0.0
+var _flicker_event_active: bool = false
+var _flicker_steps_remaining: int = 0
+var _flicker_step_time: float = 0.0
+var _flicker_step_is_dip: bool = false
+var _flicker_dip_target_energy: float = 0.0
+var _flicker_clicked_this_event: bool = false
+var _flicker_next_time: float = 0.0
+var _flashlight_audio_base_volume: float = 0.0
+var _flashlight_quiet_click: bool = false
+
 var interact_prompt: Label
 var interact_note: Node3D = null
 var _reading_ui: Control = null
@@ -73,16 +113,28 @@ var _reading_open: bool = false
 var interact_knife: Node = null
 var interact_mary_note: Node = null
 var _mary_ui: Control = null
+var _mary_ui_open: bool = false
+var _mary_ui_canvas: CanvasLayer = null
+var _mary_ui_canvas_mode: int = Node.PROCESS_MODE_INHERIT
+var _mary_ui_close_time_msec: int = -1
+var _mary_ui_ignore_interact_frame: bool = false
+var _mary_puzzle_finished: bool = false
 var _knife_used: bool = false
 var _stab_count: int = 0
-var _write_attempts: int = 0
 var _writing_locked: bool = false
 
 const READING_UI_SCENE := "res://Scenes/reading_ui.tscn"
 const NOTE_PAPER_SOUND := "res://Sounds/papper.mp3"
 const MARY_UI_SCENE: String = "res://Scenes/mary_ui.tscn"
+const MARY_UI_REOPEN_DELAY_MSEC: int = 400
 const MAX_STABS: int = 3
-const MAX_WRITE_ATTEMPTS: int = 3
+const CUT_SOUND_FALLBACK := "res://Sounds/hurt.mp3"
+const MARY_RESTART_SCENE := "res://Scenes/world.tscn"
+const MARY_ENDING_SCENE := "res://Scenes/ending.tscn"
+const DOOR_SOUND_PATHS := [
+	"res://Sounds/Door/CreakDoor.mp3",
+	"res://Sounds/door_open.mp3",
+]
 
 var _pivot_initial_pos: Vector3
 var _bob_time: float = 0.0
@@ -156,6 +208,34 @@ func _ready():
 	breath_audio.play()
 	_setup_scare_director()
 
+	if flashlight:
+		_flashlight_base_energy = flashlight.light_energy
+		_flashlight_current_energy = _flashlight_base_energy
+		_flashlight_target_energy = _flashlight_base_energy
+		_flashlight_fade_target = _flashlight_base_energy
+		_flashlight_fade_speed = _flashlight_base_energy / FLICKER_RECOVER_FADE_TIME
+		_flashlight_base_range = flashlight.spot_range
+	if flashlight_audio:
+		_flashlight_audio_base_volume = flashlight_audio.volume_db
+		flashlight_audio.finished.connect(_on_flashlight_audio_finished)
+	_reset_mary_puzzle_state()
+
+
+# Fresh scene load always starts the Mary corridor puzzle from zero.
+func _reset_mary_puzzle_state() -> void:
+	interact_knife = null
+	interact_mary_note = null
+	_mary_ui = null
+	_mary_ui_open = false
+	_mary_ui_canvas = null
+	_mary_ui_canvas_mode = Node.PROCESS_MODE_INHERIT
+	_mary_ui_close_time_msec = -1
+	_mary_ui_ignore_interact_frame = false
+	_mary_puzzle_finished = false
+	_knife_used = false
+	_stab_count = 0
+	_writing_locked = false
+
 
 # Creates expected child nodes at correct positions if they don't exist,
 # so the script works when dropped onto any CharacterBody3D with no setup.
@@ -214,7 +294,7 @@ func _ensure_child_nodes():
 		interact_prompt.visible = false
 		interact_prompt.add_theme_font_override("font", preload("res://Fonts/IMFellEnglish-Regular.ttf"))
 		interact_prompt.add_theme_font_size_override("font_size", 24)
-		interact_prompt.add_theme_color_override("font_color", Color(0.6, 0.15, 0.15, 0.9))
+		interact_prompt.add_theme_color_override("font_color", Color(0.62, 0.62, 0.62, 1.0))
 		if gameui:
 			gameui.add_child(interact_prompt)
 
@@ -253,7 +333,7 @@ func _ensure_child_nodes():
 
 
 func _input(event: InputEvent):
-	if _control_locked:
+	if _control_locked or _mary_ui_open:
 		return
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		var sensitivity := mouse_sensitivity * GameState.mouse_sensitivity
@@ -263,19 +343,29 @@ func _input(event: InputEvent):
 
 
 func _unhandled_input(event: InputEvent):
-	if event.is_action_pressed("ui_cancel"):
-		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+	# The paper owns the keyboard while it is open (A is also move_left, E is
+	# also interact). mary_ui consumes the keys it uses in _input.
+	# Safety net: E/Esc still close even if the UI did not consume the event.
+	if _mary_ui_open:
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.keycode == KEY_E or event.keycode == KEY_ESCAPE:
+				get_viewport().set_input_as_handled()
+				_on_mary_ui_closed()
+		return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if Input.get_mouse_mode() == Input.MOUSE_MODE_VISIBLE:
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	elif not _control_locked and event.is_action_pressed("flashlight_toggle"):
 		toggle_flashlight()
 	elif event.is_action_pressed("interact"):
+		if _mary_ui_ignore_interact_frame:
+			get_viewport().set_input_as_handled()
+			return
 		if interact_note and not _reading_open:
 			_open_reading(interact_note)
-		elif interact_knife and not _knife_used and _stab_count < MAX_STABS:
+		elif not _mary_puzzle_finished and interact_knife and not _knife_used and _stab_count < MAX_STABS:
 			_use_knife()
-		elif interact_mary_note and _knife_used:
+		elif not _mary_puzzle_finished and interact_mary_note and _knife_used:
 			_open_mary_ui()
 
 
@@ -303,7 +393,16 @@ func toggle_flashlight():
 	_flashlight_on = not _flashlight_on
 	if flashlight:
 		flashlight.visible = _flashlight_on
+		if not _flashlight_on:
+			# Halt the flicker event but keep the current smoothed brightness.
+			# It stays hidden while off, then eases back to its target on the
+			# next turn-on instead of snapping.
+			_flicker_event_active = false
+			_flashlight_flicker_started = false
+			_flashlight_target_energy = _flashlight_current_energy
 		if flashlight_audio:
+			_flashlight_quiet_click = false
+			flashlight_audio.volume_db = _flashlight_audio_base_volume
 			flashlight_audio.play()
 
 
@@ -392,8 +491,11 @@ func _hide_interact_prompt() -> void:
 
 
 func set_interact_knife(knife: Node) -> void:
+	if _mary_puzzle_finished:
+		return
 	interact_knife = knife
-	_show_interact_prompt("[E] Pick up")
+	if not _knife_used and _stab_count < MAX_STABS:
+		_show_interact_prompt("[E] Cut")
 
 
 func clear_interact_knife(knife: Node) -> void:
@@ -403,7 +505,14 @@ func clear_interact_knife(knife: Node) -> void:
 
 
 func set_interact_mary_note(note: Node) -> void:
+	if _mary_puzzle_finished:
+		return
 	interact_mary_note = note
+	# Area3D signals (e.g. bloodmessage) only register the note; they can never
+	# open the paper themselves, and must not show a new prompt during the
+	# reopen guard window after a close.
+	if _mary_ui_open or _mary_ui_ignore_interact_frame or Time.get_ticks_msec() - _mary_ui_close_time_msec < MARY_UI_REOPEN_DELAY_MSEC:
+		return
 	if _writing_locked:
 		return
 	if _knife_used:
@@ -417,12 +526,21 @@ func clear_interact_mary_note(note: Node) -> void:
 
 
 func _open_mary_ui() -> void:
-	if _writing_locked:
+	if _mary_puzzle_finished or _writing_locked or not _knife_used or _mary_ui_open:
+		return
+	if _mary_ui_ignore_interact_frame or Time.get_ticks_msec() - _mary_ui_close_time_msec < MARY_UI_REOPEN_DELAY_MSEC:
 		return
 	_ensure_mary_ui()
 	if _mary_ui == null:
 		return
-	_mary_ui.show_ui(_write_attempts)
+	_mary_ui_open = true
+	# The paper and its CanvasLayer must keep processing while the tree is paused.
+	if is_instance_valid(_mary_ui_canvas):
+		_mary_ui_canvas_mode = _mary_ui_canvas.process_mode
+		_mary_ui_canvas.process_mode = Node.PROCESS_MODE_ALWAYS
+	_mary_ui.process_mode = Node.PROCESS_MODE_ALWAYS
+	# MAX_STABS is the single source of truth for both cuts and attempts.
+	_mary_ui.show_ui(MAX_STABS - _stab_count)
 	get_tree().paused = true
 	_hide_interact_prompt()
 
@@ -437,51 +555,247 @@ func _ensure_mary_ui() -> void:
 	_mary_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var game_ui := get_node_or_null("GameUI") as CanvasLayer
 	if game_ui:
+		_mary_ui_canvas = game_ui
+		_mary_ui_canvas_mode = game_ui.process_mode
 		game_ui.add_child(_mary_ui)
 	_mary_ui.name_correct.connect(_on_mary_name_correct)
 	_mary_ui.name_wrong.connect(_on_mary_name_wrong)
 	_mary_ui.closed.connect(_on_mary_ui_closed)
+	if not _mary_ui.visibility_changed.is_connected(_on_mary_ui_visibility_changed):
+		_mary_ui.visibility_changed.connect(_on_mary_ui_visibility_changed)
 
 
 func _on_mary_name_correct() -> void:
+	if _mary_puzzle_finished:
+		return
+	_mark_mary_ui_closed()
+	_mary_puzzle_finished = true
 	get_tree().paused = false
-	_mary_ui.hide_ui()
-	_knife_used = false
-	# emit signal or call door open — to be wired later
+	_mary_ui_open = false
+	if is_instance_valid(_mary_ui):
+		_mary_ui.hide_ui()
+	_restore_mary_canvas_mode()
+
+	# Controls, knife and writing stay locked for the rest of this scene.
+	_control_locked = true
+	_writing_locked = true
+	_knife_used = true
+	interact_knife = null
+	interact_mary_note = null
+	_hide_interact_prompt()
+
+	await get_tree().create_timer(1.0).timeout
+	if not is_instance_valid(self):
+		return
+
+	_begin_ending_fade(2.0)
+	_fade_out_ambient_audio(2.0)
+	var door_audio := _play_door_sound()
+
+	await get_tree().create_timer(2.0).timeout
+	if not is_instance_valid(self):
+		return
+	if door_audio and door_audio.playing:
+		await door_audio.finished
+	if not is_instance_valid(self):
+		return
+	await get_tree().create_timer(0.5).timeout
+	if is_instance_valid(self):
+		get_tree().change_scene_to_file(MARY_ENDING_SCENE)
+
+
+func _begin_ending_fade(duration: float) -> CanvasLayer:
+	var cl := CanvasLayer.new()
+	cl.name = "MaryEndingFade"
+	cl.layer = 200
+	cl.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(cl)
+	var rect := ColorRect.new()
+	rect.name = "MaryEndingFadeRect"
+	rect.color = Color(0, 0, 0, 0)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	cl.add_child(rect)
+	var tw := cl.create_tween()
+	tw.tween_property(rect, "color:a", 1.0, duration)
+	return cl
+
+
+func _play_door_sound() -> AudioStreamPlayer:
+	for path in DOOR_SOUND_PATHS:
+		if not ResourceLoader.exists(path):
+			continue
+		var stream := load(path) as AudioStream
+		if stream == null:
+			continue
+		var audio := AudioStreamPlayer.new()
+		audio.name = "MaryDoorSound"
+		audio.stream = stream
+		audio.volume_db = -4.0
+		audio.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(audio)
+		audio.play()
+		return audio
+	return null
+
+
+func _fade_out_ambient_audio(duration: float) -> void:
+	var players: Array[Node] = []
+	for node in get_tree().get_nodes_in_group("bg_music"):
+		if node is AudioStreamPlayer or node is AudioStreamPlayer2D or node is AudioStreamPlayer3D:
+			if not players.has(node):
+				players.append(node)
+	var scene := get_tree().current_scene
+	if scene:
+		_collect_ambient_audio(scene, players)
+	for player in players:
+		var tw := player.create_tween()
+		tw.tween_property(player, "volume_db", -80.0, duration)
+
+
+func _collect_ambient_audio(node: Node, players: Array[Node]) -> void:
+	for child in node.get_children():
+		if child is AudioStreamPlayer or child is AudioStreamPlayer2D or child is AudioStreamPlayer3D:
+			var label := String(child.name).to_lower()
+			if "music" in label or "ambian" in label or "ambient" in label or "theme" in label or "hum" in label:
+				if not players.has(child):
+					players.append(child)
+		_collect_ambient_audio(child, players)
 
 
 func _on_mary_name_wrong() -> void:
-	_write_attempts += 1
-	if _write_attempts >= MAX_WRITE_ATTEMPTS:
-		get_tree().paused = false
+	_mark_mary_ui_closed()
+	get_tree().paused = false
+	_mary_ui_open = false
+	if is_instance_valid(_mary_ui):
 		_mary_ui.hide_ui()
-		_knife_used = false
-		_write_attempts = 0
-		if interact_knife:
-			_show_interact_prompt("[E] Pick up knife again")
-		_writing_locked = true
-	# wrong feedback handled inside mary_ui (flash)
+	_restore_mary_canvas_mode()
+	_knife_used = false
+	_writing_locked = true
+	if _stab_count >= MAX_STABS:
+		_die_from_mary_failure()
+		return
+	# A failed attempt ends here; the knife prompt offers the next cut.
+	if interact_knife:
+		_show_interact_prompt("[E] Cut")
 
 
 func _on_mary_ui_closed() -> void:
+	_mark_mary_ui_closed()
 	get_tree().paused = false
-	_mary_ui.hide_ui()
+	_mary_ui_open = false
+	if is_instance_valid(_mary_ui):
+		_mary_ui.hide_ui()
+	_restore_mary_canvas_mode()
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	_show_mary_prompt_after_close()
 
 
+# Safety net: hiding the paper from anywhere also clears the controller's open
+# flag, so _mary_ui_open can never stay true while the UI is gone.
+func _on_mary_ui_visibility_changed() -> void:
+	if _mary_ui_open and is_instance_valid(_mary_ui) and not _mary_ui.visible:
+		_on_mary_ui_closed()
+
+
+# A timestamp (not a Timer) is used because the tree may still be paused here.
+func _mark_mary_ui_closed() -> void:
+	_mary_ui_close_time_msec = Time.get_ticks_msec()
+	_mary_ui_ignore_interact_frame = true
+	var close_time := _mary_ui_close_time_msec
+	await get_tree().process_frame
+	if _mary_ui_close_time_msec == close_time:
+		_mary_ui_ignore_interact_frame = false
+
+
+func _restore_mary_canvas_mode() -> void:
+	if is_instance_valid(_mary_ui_canvas):
+		_mary_ui_canvas.process_mode = _mary_ui_canvas_mode
+	_mary_ui_canvas = null
+	_mary_ui_canvas_mode = Node.PROCESS_MODE_INHERIT
+
+
+# Closing never spends a cut or counts as a wrong attempt.
+func _show_mary_prompt_after_close() -> void:
+	if _mary_puzzle_finished:
+		return
+	if _writing_locked and _stab_count < MAX_STABS and interact_knife:
+		_show_interact_prompt("[E] Cut")
+	elif not _writing_locked and _knife_used and interact_mary_note:
+		_show_interact_prompt("[E] Write")
+	else:
+		_hide_interact_prompt()
+
+
+# One cut buys exactly one writing attempt.
 func _use_knife() -> void:
+	if _mary_puzzle_finished:
+		return
 	_stab_count += 1
 	_knife_used = true
 	_writing_locked = false
-	# play hurt sound
+	_play_cut_sound()
+	_flash_blood_vignette()
+	_flash_cut_red()
+	_small_camera_shake()
+	if interact_mary_note:
+		_show_interact_prompt("[E] Write")
+	else:
+		_hide_interact_prompt()
+
+
+func _play_cut_sound() -> void:
+	var path := CUT_SOUND_FALLBACK
+	if is_instance_valid(interact_knife):
+		var exported_path = interact_knife.get("stab_sound_path")
+		if typeof(exported_path) == TYPE_STRING and not String(exported_path).is_empty():
+			path = String(exported_path)
+	var stream := load(path) as AudioStream
+	if stream == null:
+		return
 	var audio := AudioStreamPlayer.new()
-	audio.stream = load("res://Sounds/hurt.mp3")
+	audio.stream = stream
 	audio.volume_db = -5.0
 	add_child(audio)
 	audio.play()
 	audio.finished.connect(audio.queue_free)
-	# blood vignette — brief red flash on screen edges
+
+
+func _flash_cut_red() -> void:
+	var cl := CanvasLayer.new()
+	cl.layer = 16
+	add_child(cl)
+	var rect := ColorRect.new()
+	rect.color = Color(0.75, 0.0, 0.0, 0.35)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	cl.add_child(rect)
+	var tw := create_tween()
+	tw.tween_property(rect, "color:a", 0.0, 0.14)
+	tw.tween_callback(cl.queue_free)
+
+
+func _small_camera_shake() -> void:
+	if camera == null:
+		return
+	_camera_rest_rotation = camera.rotation
+	_shake_trauma = 0.35
+	_shake_time = 0.0
+
+
+func _die_from_mary_failure() -> void:
+	if _death_active:
+		return
+	_control_locked = true
+	_play_cut_sound()
 	_flash_blood_vignette()
-	_show_interact_prompt("[E] Write")
+	_flash_cut_red()
+	_small_camera_shake()
+	Fade.to_black(self, func():
+		get_tree().paused = false
+		GameState.lives = GameState.max_lives
+		get_tree().change_scene_to_file(MARY_RESTART_SCENE)
+	)
 
 
 func _flash_blood_vignette() -> void:
@@ -502,6 +816,193 @@ func _flash_blood_vignette() -> void:
 func _notification(what: int):
 	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+
+func _process(delta: float):
+	_update_flashlight_flicker(delta)
+
+
+# Wear-out model for the flashlight. The usage counter only advances while the
+# light is actually on; being off pauses it, and only a full recovery_off_time
+# away resets it. Energy is always eased toward a target so no flicker or
+# recovery ever snaps on/off.
+func _update_flashlight_flicker(delta: float):
+	if flashlight == null:
+		return
+
+	var light_on := _flashlight_on and flashlight.visible
+	if not light_on:
+		_flashlight_off_time += delta
+		_flashlight_flicker_started = false
+		_flicker_event_active = false
+		# Hold the current brightness while hidden. Turning it back on will
+		# ease toward the appropriate target rather than jumping.
+		_flashlight_target_energy = _flashlight_current_energy
+		if _flashlight_off_time >= recovery_off_time:
+			_flashlight_off_time = recovery_off_time
+			if _flashlight_usage_time > 0.0:
+				_flashlight_usage_time = 0.0
+				_flashlight_recovery_pending = true
+			# Range returns exactly to its original value once recovered.
+			flashlight.spot_range = _flashlight_base_range
+		return
+
+	_flashlight_off_time = 0.0
+	_flashlight_usage_time += delta
+	if _flashlight_recovery_pending:
+		_flashlight_recovery_pending = false
+		_flashlight_recovery_time_left = FLICKER_FULL_RECOVERY_TIME
+
+	_flashlight_target_energy = _get_flashlight_rest_energy()
+	if _flashlight_usage_time >= flicker_start_time:
+		_update_flicker_events(delta)
+	else:
+		_flashlight_flicker_started = false
+		_flicker_event_active = false
+
+	_smooth_flashlight_energy(delta)
+	_update_flashlight_range()
+
+
+# Resting brightness dims from 100% to (1 - base_dim_amount) over the first
+# flicker_start_time seconds, then continues down to min_brightness at
+# flicker_max_time.
+func _get_flashlight_rest_energy() -> float:
+	var factor: float
+	if _flashlight_usage_time <= flicker_start_time:
+		var t := clampf(_flashlight_usage_time / maxf(flicker_start_time, 0.001), 0.0, 1.0)
+		factor = lerpf(1.0, 1.0 - base_dim_amount, t)
+	else:
+		var t := _get_flicker_progress()
+		factor = lerpf(1.0 - base_dim_amount, min_brightness, t)
+	return _flashlight_base_energy * clampf(factor, 0.0, 1.0)
+
+
+func _get_flicker_progress() -> float:
+	var span := maxf(flicker_max_time - flicker_start_time, 0.001)
+	return clampf((_flashlight_usage_time - flicker_start_time) / span, 0.0, 1.0)
+
+
+func _smooth_flashlight_energy(delta: float):
+	if _flashlight_recovery_time_left > 0.0:
+		_flashlight_recovery_time_left = maxf(0.0, _flashlight_recovery_time_left - delta)
+
+	# When the target changes, size the move speed so that transition takes the
+	# intended fade time regardless of how deep the dip is. This keeps even the
+	# smallest 15% dip visible instead of snapping.
+	var target_epsilon := maxf(_flashlight_base_energy * 0.002, 0.0001)
+	if absf(_flashlight_target_energy - _flashlight_fade_target) > target_epsilon:
+		_flashlight_fade_target = _flashlight_target_energy
+		var fade_time := FLICKER_RECOVER_FADE_TIME
+		if _flashlight_target_energy < _flashlight_current_energy:
+			fade_time = FLICKER_DIP_FADE_TIME
+		elif _flashlight_recovery_time_left > 0.0:
+			fade_time = FLICKER_FULL_RECOVERY_TIME
+		var distance := absf(_flashlight_target_energy - _flashlight_current_energy)
+		_flashlight_fade_speed = distance / maxf(fade_time, 0.001)
+
+	_flashlight_current_energy = move_toward(
+		_flashlight_current_energy,
+		_flashlight_target_energy,
+		_flashlight_fade_speed * delta
+	)
+	flashlight.light_energy = _flashlight_current_energy
+
+
+func _update_flashlight_range():
+	var wear := clampf(_flashlight_usage_time / maxf(flicker_max_time, 0.001), 0.0, 1.0)
+	flashlight.spot_range = _flashlight_base_range * lerpf(1.0, 1.0 - FLICKER_RANGE_DIM, wear)
+
+
+func _update_flicker_events(delta: float):
+	var progress := _get_flicker_progress()
+	var rest_energy := _flashlight_target_energy
+
+	if not _flashlight_flicker_started:
+		_flashlight_flicker_started = true
+		_flicker_event_active = false
+		_schedule_next_flicker(progress)
+		return
+
+	if _flicker_event_active:
+		_flicker_step_time -= delta
+		if _flicker_step_time <= 0.0:
+			if _flicker_step_is_dip:
+				_flicker_step_is_dip = false
+				_flicker_step_time = FLICKER_RECOVER_FADE_TIME + randf_range(0.0, 0.08)
+			elif _flicker_steps_remaining > 0:
+				_begin_flicker_dip(progress, rest_energy)
+			else:
+				_flicker_event_active = false
+				_schedule_next_flicker(progress)
+
+		if _flicker_event_active and _flicker_step_is_dip:
+			_flashlight_target_energy = _flicker_dip_target_energy
+		return
+
+	_flicker_next_time -= delta
+	if _flicker_next_time <= 0.0:
+		_start_flicker_event(progress, rest_energy)
+		if _flicker_event_active and _flicker_step_is_dip:
+			_flashlight_target_energy = _flicker_dip_target_energy
+
+
+func _schedule_next_flicker(progress: float):
+	var interval := lerpf(FLICKER_INTERVAL_START, FLICKER_INTERVAL_END, progress)
+	var jitter := interval * FLICKER_INTERVAL_JITTER
+	_flicker_next_time = randf_range(interval - jitter, interval + jitter)
+
+
+# Each event is a short burst of 1-3 small dips separated by smooth recoveries.
+func _start_flicker_event(progress: float, rest_energy: float):
+	_flicker_event_active = true
+	_flicker_steps_remaining = randi_range(1, 3)
+	_flicker_clicked_this_event = false
+	_begin_flicker_dip(progress, rest_energy)
+
+
+func _begin_flicker_dip(progress: float, rest_energy: float):
+	_flicker_steps_remaining -= 1
+	_flicker_step_is_dip = true
+	# Give the smooth fade a beat to reach the dip before easing back out.
+	_flicker_step_time = FLICKER_DIP_FADE_TIME + randf_range(0.02, 0.05)
+	_flicker_dip_target_energy = _pick_flicker_dip_target(progress, rest_energy)
+	_flashlight_target_energy = _flicker_dip_target_energy
+
+	# Only the deeper dips click, and at most once per burst.
+	if not _flicker_clicked_this_event and _flicker_dip_target_energy < rest_energy * 0.85:
+		_flicker_clicked_this_event = true
+		if randf() < FLICKER_CLICK_CHANCE:
+			_play_flicker_click()
+
+
+# Gentle dips go from 85% of the current resting level down to 40% as wear
+# progresses. Only after 270s can a rare, much deeper dim occur, and even that
+# stays at 8-15% instead of switching fully off.
+func _pick_flicker_dip_target(progress: float, rest_energy: float) -> float:
+	if _flashlight_usage_time >= FLICKER_CUTOUT_START_TIME and randf() < FLICKER_CUTOUT_CHANCE:
+		return _flashlight_base_energy * randf_range(0.08, 0.15)
+
+	var dip_scale := lerpf(0.85, 0.40, progress) + randf_range(-0.03, 0.03)
+	return rest_energy * clampf(dip_scale, 0.35, 0.92)
+
+
+func _play_flicker_click():
+	if flashlight_audio == null or flashlight_audio.stream == null:
+		return
+	if flashlight_audio.playing:
+		return
+	_flashlight_quiet_click = true
+	flashlight_audio.volume_db = FLICKER_CLICK_VOLUME_DB
+	flashlight_audio.play()
+
+
+func _on_flashlight_audio_finished():
+	if not _flashlight_quiet_click:
+		return
+	_flashlight_quiet_click = false
+	if flashlight_audio:
+		flashlight_audio.volume_db = _flashlight_audio_base_volume
 
 
 func _physics_process(delta: float):
@@ -545,7 +1046,7 @@ func _apply_gravity(delta: float):
 
 
 func _get_input_dir() -> Vector2:
-	if _control_locked or _ritual_locked:
+	if _control_locked or _ritual_locked or _mary_ui_open:
 		return Vector2.ZERO
 	return Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 
@@ -788,6 +1289,15 @@ func begin_death_sequence(kill_dir: Vector3 = Vector3.FORWARD) -> DeathCam:
 	_control_locked = true
 	_death_active = true
 
+	# chase_ended has already dropped the heartbeat target, but the player stops
+	# ticking its audio updates while _death_active is set. Stop it outright so
+	# the heartbeat cannot keep playing through the death hold.
+	_heartbeat_active = false
+	_heartbeat_target_vol = -80.0
+	_monster_ref = null
+	if _heartbeat_player and _heartbeat_player.playing:
+		_heartbeat_player.stop()
+
 	var rig := DeathCam.new()
 	rig.name = "DeathCamRig"
 	rig.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -818,9 +1328,17 @@ func respawn():
 
 	camera_pivot.rotation = Vector3.ZERO
 	camera_pivot.position = _pivot_initial_pos
+
+	# Safety net: if the death rig could not reattach the camera, bring it home
+	# here so the view is always restored before gameplay resumes.
+	if camera and camera.get_parent() != camera_pivot:
+		if camera.get_parent():
+			camera.get_parent().remove_child(camera)
+		camera_pivot.add_child(camera)
 	camera.rotation = Vector3.ZERO
 	camera.position = Vector3.ZERO
 	camera.fov = _fov_default
+	camera.current = true
 	_shake_trauma = 0.0
 	_fov_trauma = 0.0
 	_shake_time = 0.0

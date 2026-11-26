@@ -52,6 +52,7 @@ func _run_sequence() -> void:
 
 	await get_tree().create_timer(1.5).timeout
 	await _fade_to_black(1.0)
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	get_tree().change_scene_to_file("res://Scenes/MainManu(original).tscn")
 
 func _show_line(line: String) -> Signal:

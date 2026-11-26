@@ -41,6 +41,7 @@ func _ready():
 	call_deferred("_wire_monster")
 	call_deferred("_update_lives_ui")
 	call_deferred("_update_book_ui")
+	add_child(preload("res://Scripts/debug_menu.gd").new() as Node)  # DEBUG_HOOK
 
 
 # The monster kills in one touch. Death begins immediately — at the same
@@ -96,7 +97,7 @@ func lose_life():
 
 
 func _update_lives_ui():
-	var ui := get_node_or_null("Player/GameUI/LivesUI") as Label
+	var ui := get_node_or_null("Player/GameUI/LivesUI") as HBoxContainer
 	if ui and ui.has_method("set_lives"):
 		ui.set_lives(_current_lives)
 
@@ -131,7 +132,7 @@ func _show_death_screen(force_game_over: bool = false):
 	title.name = "DeathTitle"
 	title.text = "YOU DIED"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_color_override("font_color", Color(0.8, 0.1, 0.1))
+	title.add_theme_color_override("font_color", Color(0.62, 0.62, 0.62, 1.0))
 	title.add_theme_font_override("font", preload("res://Fonts/IMFellEnglish-Regular.ttf"))
 	title.add_theme_font_size_override("font_size", 36)
 	vbox.add_child(title)
@@ -139,7 +140,7 @@ func _show_death_screen(force_game_over: bool = false):
 	var subtitle := Label.new()
 	subtitle.name = "DeathSubtitle"
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_color_override("font_color", Color(0.8, 0.1, 0.1))
+	subtitle.add_theme_color_override("font_color", Color(0.62, 0.62, 0.62, 1.0))
 	subtitle.add_theme_font_override("font", preload("res://Fonts/IMFellEnglish-Regular.ttf"))
 	subtitle.add_theme_font_size_override("font_size", 20)
 	vbox.add_child(subtitle)
@@ -364,15 +365,11 @@ func _create_final_hunt_ui():
 	label.name = "FinalHuntCountdown"
 	label.text = _format_final_hunt_time(final_hunt_duration)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_color_override("font_color", Color(0.8, 0.1, 0.1))
+	label.add_theme_color_override("font_color", Color(0.62, 0.62, 0.62, 1.0))
 	label.add_theme_font_override("font", preload("res://Fonts/IMFellEnglish-Regular.ttf"))
 	label.add_theme_font_size_override("font_size", 32)
 	center.add_child(label)
 	_final_hunt_countdown_label = label
-
-	var ui_shader := game_ui.get_node_or_null("UIShader")
-	if ui_shader:
-		game_ui.move_child(anchor, ui_shader.get_index())
 
 
 func _show_final_hunt_message():
@@ -411,10 +408,6 @@ func _show_final_hunt_message():
 	label.add_theme_font_size_override("font_size", 24)
 	label.modulate.a = 0.0
 	center.add_child(label)
-
-	var ui_shader := game_ui.get_node_or_null("UIShader")
-	if ui_shader:
-		game_ui.move_child(anchor, ui_shader.get_index())
 
 	var tw := create_tween()
 	tw.tween_property(label, "modulate:a", 1.0, 0.25)

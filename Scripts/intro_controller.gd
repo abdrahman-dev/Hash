@@ -25,7 +25,7 @@ const LINE_HOLD := 0.9
 const HINT_TEXT := "Press F to turn on the flashlight."
 const HINT_DURATION := 3.0
 
-const TEXT_COLOR := Color(0.65, 0.05, 0.05, 1.0)
+const TEXT_COLOR := Color(0.62, 0.62, 0.62, 1.0)
 const TYPING_VOLUME_DB := -12.0
 const TYPING_SKIP_CHARS := " .,!?;:'\"()[]{}<>-_—…"
 
@@ -92,9 +92,6 @@ func _build_label():
 	_label.anchor_bottom = 0.80
 	_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_label.grow_vertical = Control.GROW_DIRECTION_BOTH
-	var shader := _gameui.get_node_or_null("UIShader")
-	if shader:
-		_gameui.move_child(_label, shader.get_index())
 
 
 func _process(delta: float):

@@ -1,0 +1,50 @@
+[gd_scene format=4 uid="uid://cyybrie5vqer8"]
+
+[ext_resource type="Texture2D" uid="uid://cpbcajujpo06b" path="res://Textures/house/house_interior__ps1_asset_pack_3.png" id="1_w6aom"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m4131"]
+resource_name = "atlas_puertas"
+cull_mode = 2
+albedo_texture = ExtResource("1_w6aom")
+roughness = 0.82111454
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_81pef"]
+_surfaces = [{
+"aabb": AABB(0, -0.02, 0, 0.9, 0.02, 2.0286),
+"format": 34359742465,
+"index_count": 60,
+"index_data": PackedByteArray("CAACAAAAAgADAAAAAAADAAkAAAAJAAgAAgAFAAMACQADAAUACgAFAAIACAAKAAIACQAFAAsACgALAAUACAAJAAYAAQALAAoACAABAAoACQALAAcAAQAHAAsACQAHAAYACAAEAAEABAAHAAEACAAGAAQABAAGAAcA"),
+"lods": [0.0002835013, PackedByteArray("AAABAAIAAgADAAAAAAAEAAEAAgAFAAMAAQAFAAIAAAADAAYABgADAAUAAAAGAAQAAQAHAAUABgAFAAcABAAHAAEABAAGAAcA")],
+"name": "atlas_puertas",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 12,
+"vertex_data": PackedByteArray("ZmZmPwrXo7wAAAAAAAAAAArXo7yV1AFAZmZmPwrXo7yV1AFAZmZmPwAAAAAAAAAAAAAAAArXo7wAAAAAZmZmPwAAAACV1AFAAAAAAAAAAAAAAAAAAAAAAAAAAACV1AFAZmbmPgrXo7wAAAAAZmbmPgAAAAAAAAAAZmbmPgrXo7yV1AFAZmbmPgAAAACV1AFA")
+}]
+blend_shape_mode = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_p0e35"]
+resource_name = "Sketchfab_Scene_Plane_009_atlas_puertas_0"
+_surfaces = [{
+"aabb": AABB(0, -0.02, 0, 0.9, 0.02, 2.0286),
+"attribute_data": PackedByteArray("ZhqaPoCRRjsA2qU7hocrP2Yamj6Ghys/ANqlO4CRRjsA2qU7gJFGO2Yamj6AkUY7ZhqaPoaHKz8A2qU7hocrP2Yamj6AkUY7ZhqaPoCRRjsA2qU7gJFGOwDapTuAkUY7ZhqaPoaHKz9mGpo+gJFGO2Yamj6AkUY7ZhqaPoaHKz8A2qU7gJFGOwDapTuGhys/ANqlO4aHKz8A2qU7gJFGOwDapTuGhys/ZhqaPoaHKz9mGpo+hocrPwDapTuGhys/z7EcPoCRRjvPsRw+hocrP8+xHD6AkUY7z7EcPoaHKz/PsRw+gJFGO8+xHD6AkUY7z7EcPoaHKz/PsRw+hocrPw=="),
+"format": 34359742487,
+"index_count": 60,
+"index_data": PackedByteArray("GAACAAAAGAAZAAIAGAABABkAGAADAAEAGgAGABsAGgAFAAYAGgAbAAcAGgAHAAQACAAcAB0ACAAJABwAHQAcAAoAHQAKAAsADAANAA4ADAAPAA0AHgAVABYAHgAfABUAFAAfAB4AFAAXAB8AEAARABIAEAATABEA"),
+"lods": [0.0002835013, PackedByteArray("AAABAAIAAAADAAEABAAFAAYABAAGAAcACAAJAAoACAAKAAsADAANAA4ADAAPAA0AEAARABIAEAATABEAFAAVABYAFAAXABUA")],
+"material": SubResource("StandardMaterial3D_m4131"),
+"name": "atlas_puertas",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 32,
+"vertex_data": PackedByteArray("ZmZmPwrXo7wAAAAAAAAAAArXo7yV1AFAZmZmPwrXo7yV1AFAAAAAAArXo7wAAAAAAAAAAAAAAAAAAAAAZmZmPwAAAAAAAAAAZmZmPwAAAACV1AFAAAAAAAAAAACV1AFAZmZmPwrXo7wAAAAAZmZmPwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAArXo7wAAAAAZmZmPwrXo7yV1AFAZmZmPwAAAAAAAAAAZmZmPwrXo7wAAAAAZmZmPwAAAACV1AFAAAAAAArXo7wAAAAAAAAAAAAAAACV1AFAAAAAAArXo7yV1AFAAAAAAAAAAAAAAAAAAAAAAArXo7yV1AFAZmZmPwAAAACV1AFAZmZmPwrXo7yV1AFAAAAAAAAAAACV1AFAZmbmPgrXo7wAAAAAZmbmPgrXo7yV1AFAZmbmPgAAAAAAAAAAZmbmPgAAAACV1AFAZmbmPgAAAAAAAAAAZmbmPgrXo7wAAAAAZmbmPgrXo7yV1AFAZmbmPgAAAACV1AFA/38AAP///z//fwAA////P/9/AAD///8//38AAP///z//f///////v/9///////+//3///////7//f///////v/////////+//////////7//////////v/////////+/////f////7////9/////v////3////+/////f////78AAP9/////vwAA/3////+/AAD/f////78AAP9/////v/9//3////8//3//f////z//f/9/////P/9//3////8//38AAP///z//fwAA////P/9///////+//3///////7//////////v/////////+//3//f////z//f/9/////Pw==")
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_81pef")
+
+[node name="Door" type="Node3D" unique_id=553718366]
+
+[node name="Plane_009_atlas_puertas_0" type="MeshInstance3D" parent="." unique_id=1258101246]
+transform = Transform3D(-1, -8.742278e-08, -3.821371e-15, 0, -4.371139e-08, 1, -8.742278e-08, 1, 4.371139e-08, 0, 0, 0)
+mesh = SubResource("ArrayMesh_p0e35")

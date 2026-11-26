@@ -50,7 +50,9 @@ func _ready():
 	_player.set("_flashlight_on", false)
 	_flashlight = _player.get("flashlight") as SpotLight3D
 	if _flashlight == null:
-		_flashlight = _player.find_child("SpotLight3D", true, false) as SpotLight3D
+		_flashlight = _player.get_node_or_null("CameraPivot/Camera/SpotLight3D") as SpotLight3D
+	if _flashlight == null:
+		_flashlight = _player.get_node_or_null("CameraPivot/Camera3D/SpotLight3D") as SpotLight3D
 	if _flashlight:
 		_flashlight.visible = false
 
@@ -64,7 +66,9 @@ func _ready():
 		queue_free()
 		return
 
-	_camera = _camera_pivot.get_node_or_null("Camera3D") as Camera3D
+	_camera = _camera_pivot.get_node_or_null("Camera") as Camera3D
+	if _camera == null:
+		_camera = _camera_pivot.get_node_or_null("Camera3D") as Camera3D
 	if _camera == null:
 		push_error("ending_mary: Camera not found under CameraPivot")
 		queue_free()
@@ -198,7 +202,7 @@ func _on_line_fade_done():
 func _hide_game_ui():
 	var game_ui := _player.get_node_or_null("GameUI") as CanvasLayer
 	if game_ui:
-		for child_name in ["BookUI", "LivesUI", "InteractPrompt", "UIShader", "StaminaCrosshairUI"]:
+		for child_name in ["StaminaBar", "CrosshairDot", "BookUI", "LivesUI", "InteractPrompt"]:
 			var child := game_ui.get_node_or_null(child_name) as CanvasItem
 			if child:
 				child.visible = false

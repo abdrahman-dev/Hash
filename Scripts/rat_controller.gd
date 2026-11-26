@@ -11,6 +11,20 @@ extends CharacterBody3D
 # movement direction via the ForwardMarker and occasionally plays one of its
 # positional squeak sounds at a quiet, randomized pace.
 const RUN_ANIM := "Armature|Run"
+const IDLE_ANIM := "Armature|Idle"
+
+# Run animation playback rate. The base multiplier is applied at the slowest
+# wander speed and scaled by the rat's actual velocity, so fleeing rats animate
+# faster than wandering ones.
+@export var run_anim_speed: float = 1.8
+
+const IDLE_SPEED_THRESHOLD := 0.1
+const IDLE_BOB_AMPLITUDE := 0.005
+const IDLE_BOB_SPEED := 2.2
+const IDLE_LOOK_MIN_DELAY := 1.0
+const IDLE_LOOK_MAX_DELAY := 3.0
+const IDLE_LOOK_ANGLE_DEG := 3.0
+const IDLE_LOOK_TWEEN_TIME := 0.25
 
 const TURN_SPEED := 18.0
 const ARRIVE_DIST := 0.3
@@ -37,6 +51,14 @@ const SOUND_VOLUME_DB := -20.0
 var _anim_player: AnimationPlayer
 var _forward_marker: Marker3D
 var _fwd_angle_offset := 0.0
+
+var _visual_root: Node3D
+var _visual_base_position := Vector3.ZERO
+var _visual_base_rotation_y := 0.0
+var _idling := false
+var _idle_time := 0.0
+var _idle_look_delay := 0.0
+var _idle_look_tween: Tween
 
 var _player: Node3D
 var _fleeing := false
@@ -67,11 +89,15 @@ func _ready():
 	_rng.randomize()
 
 	_find_anim_player()
+	_find_visual_root()
 
 	if _anim_player:
 		var run_anim := _anim_player.get_animation(RUN_ANIM)
 		if run_anim:
 			run_anim.loop_mode = Animation.LOOP_LINEAR
+		var idle_anim := _anim_player.get_animation(IDLE_ANIM)
+		if idle_anim:
+			idle_anim.loop_mode = Animation.LOOP_LINEAR
 		_anim_player.play(RUN_ANIM)
 
 	_collect_sound_players()
@@ -92,6 +118,7 @@ func _physics_process(delta: float):
 		_wander_pause -= delta
 		velocity = Vector3.ZERO
 		move_and_slide()
+		_update_animation(delta)
 		if _wander_pause <= 0.0:
 			_pick_destination()
 		return
@@ -106,6 +133,7 @@ func _physics_process(delta: float):
 		_pick_destination()
 
 	face_movement_direction(delta)
+	_update_animation(delta)
 
 
 func _move_along_path(_delta: float):
@@ -427,6 +455,13 @@ func _find_forward_marker_in(node: Node) -> Marker3D:
 	return null
 
 
+func _find_visual_root():
+	_visual_root = get_node_or_null("Sketchfab_Scene") as Node3D
+	if _visual_root:
+		_visual_base_position = _visual_root.position
+		_visual_base_rotation_y = _visual_root.rotation.y
+
+
 func _find_anim_player():
 	for child in get_children():
 		if child is AnimationPlayer:
@@ -488,3 +523,79 @@ func face_movement_direction(delta: float):
 	var target_angle := atan2(direction.x, direction.z) - _fwd_angle_offset
 
 	rotation.y = lerp_angle(rotation.y, target_angle, TURN_SPEED * delta)
+
+
+# Picks between the run and idle animations from the rat's real horizontal
+# velocity. Movement switches back to the run clip immediately; standing still
+# plays the idle clip plus a tiny procedural bob/look-around.
+func _update_animation(delta: float):
+	if _anim_player == null:
+		return
+
+	var speed := Vector2(velocity.x, velocity.z).length()
+
+	if speed < IDLE_SPEED_THRESHOLD:
+		_enter_idle(delta)
+		return
+
+	_exit_idle()
+
+	if _anim_player.current_animation != RUN_ANIM:
+		_anim_player.play(RUN_ANIM)
+
+	_anim_player.speed_scale = run_anim_speed * maxf(speed / SPEED_MIN, 0.1)
+
+
+func _enter_idle(delta: float):
+	_idling = true
+
+	if _anim_player.current_animation != IDLE_ANIM:
+		_anim_player.play(IDLE_ANIM)
+
+	_anim_player.speed_scale = 1.0
+
+	_idle_time += delta
+
+	if _visual_root:
+		_visual_root.position.y = _visual_base_position.y + sin(_idle_time * IDLE_BOB_SPEED) * IDLE_BOB_AMPLITUDE
+
+	_tick_idle_look(delta)
+
+
+func _exit_idle():
+	if not _idling:
+		return
+
+	_idling = false
+	_idle_time = 0.0
+
+	if _idle_look_tween and _idle_look_tween.is_valid():
+		_idle_look_tween.kill()
+
+	_idle_look_tween = null
+
+	if _visual_root:
+		_visual_root.position.y = _visual_base_position.y
+		_visual_root.rotation.y = _visual_base_rotation_y
+
+
+# Occasional tiny head turn while idle: a short random yaw tween every 1-3s.
+func _tick_idle_look(delta: float):
+	if _visual_root == null:
+		return
+
+	_idle_look_delay -= delta
+
+	if _idle_look_delay > 0.0:
+		return
+
+	_idle_look_delay = _rng.randf_range(IDLE_LOOK_MIN_DELAY, IDLE_LOOK_MAX_DELAY)
+
+	if _idle_look_tween and _idle_look_tween.is_valid():
+		_idle_look_tween.kill()
+
+	var look_angle := _visual_base_rotation_y + deg_to_rad(_rng.randf_range(-IDLE_LOOK_ANGLE_DEG, IDLE_LOOK_ANGLE_DEG))
+
+	_idle_look_tween = create_tween()
+	_idle_look_tween.tween_property(_visual_root, "rotation:y", look_angle, IDLE_LOOK_TWEEN_TIME)
+	_idle_look_tween.tween_property(_visual_root, "rotation:y", _visual_base_rotation_y, IDLE_LOOK_TWEEN_TIME * 1.5)

@@ -87,6 +87,10 @@ var _footstep_audio: AudioStreamPlayer3D
 var _spawn_transform: Transform3D
 var _final_hunt_active: bool = false
 
+var debug_ignore_player: bool = false  # DEBUG_HOOK
+var debug_no_catch: bool = false  # DEBUG_HOOK
+var debug_speed_scale: float = 1.0  # DEBUG_HOOK
+
 
 func _ready():
 	_ensure_visual()
@@ -374,6 +378,10 @@ func _setup_detection():
 
 
 func _on_detection_timeout():
+	if _caught_player:
+		return
+	if debug_ignore_player:  # DEBUG_HOOK
+		return  # DEBUG_HOOK
 	var player := get_node_or_null(target_player) as Node3D
 	if not player:
 		return
@@ -405,6 +413,8 @@ func _has_line_of_sight(player: Node3D) -> bool:
 # Catches the player when within catch_range with a clear line of sight,
 # so the monster never grabs through walls. Collision shapes stay untouched.
 func _check_player_contact():
+	if debug_ignore_player:  # DEBUG_HOOK
+		return  # DEBUG_HOOK
 	var player := get_node_or_null(target_player) as Node3D
 	if not player:
 		return
@@ -414,8 +424,40 @@ func _check_player_contact():
 		return
 	if not _has_line_of_sight(player):
 		return
+	_catch_player()
+
+
+# Stops the chase the instant the player is caught: the monster leaves HUNTING,
+# stops running and screaming, drops its heartbeat (chase_ended), cancels any
+# permanent final-hunt lock and freezes on an idle patrol animation until
+# reset_to_spawn() runs on respawn.
+func _catch_player():
+	if debug_ignore_player or debug_no_catch:  # DEBUG_HOOK
+		return  # DEBUG_HOOK
+	if _caught_player:
+		return
 	_caught_player = true
+	_final_hunt_active = false
 	velocity = Vector3.ZERO
+
+	_end_scream()
+	current_state = State.IDLE
+
+	if _wander_timer:
+		_wander_timer.stop()
+	if _wander_pause_timer:
+		_wander_pause_timer.stop()
+
+	_wander_pause_active = true
+	_path.clear()
+	_path_index = 0
+
+	if _footstep_audio:
+		_footstep_audio.volume_db = -80.0
+
+	_last_anim = ""
+	_update_animation(0.0)
+	chase_ended.emit()
 	player_caught.emit()
 
 
@@ -454,6 +496,9 @@ func trigger_final_phase():
 # No LOS or range checks — the monster simply knows where the player is and
 # re-paths there directly through the maze.
 func force_hunt_mode():
+	if _caught_player:
+		_final_hunt_active = false
+		return
 	_final_hunt_active = true
 	_wander_timer.stop()
 	_wander_pause_timer.stop()
@@ -670,9 +715,7 @@ func _physics_process(delta: float):
 				var col := get_slide_collision(i)
 				var col_obj := col.get_collider()
 				if col_obj and col_obj.is_in_group("player"):
-					_caught_player = true
-					velocity = Vector3.ZERO
-					player_caught.emit()
+					_catch_player()
 					break
 
 	if _scream_active:
@@ -737,7 +780,7 @@ func _move_along_path():
 		to_target.y = 0.0
 
 	var dir := to_target.normalized()
-	var speed := wander_speed if current_state == State.IDLE else hunt_speed
+	var speed := (wander_speed if current_state == State.IDLE else hunt_speed) * debug_speed_scale  # DEBUG_HOOK
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
 

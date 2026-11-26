@@ -21,13 +21,37 @@ func _ready():
 
 
 func _unhandled_input(event: InputEvent):
-	if event.is_action_pressed("ui_cancel"):
-		if _busy:
-			return
-		if _open:
-			_resume()
-		elif not get_tree().paused:
-			_open_menu()
+	if not event.is_action_pressed("ui_cancel"):
+		return
+	var mary_ui_open := get_tree().get_first_node_in_group("mary_ui_open") != null
+	var player := get_tree().get_first_node_in_group("player")
+	var player_mary_open: bool = player != null and player.get("_mary_ui_open") == true
+	if mary_ui_open or player_mary_open:
+		get_viewport().set_input_as_handled()
+		return
+	if _busy:
+		return
+	if _open:
+		get_viewport().set_input_as_handled()
+		_resume()
+		return
+	if get_tree().paused:
+		return
+	if not _can_open():
+		return
+	get_viewport().set_input_as_handled()
+	_open_menu()
+
+
+func _can_open() -> bool:
+	var player := get_tree().get_first_node_in_group("player")
+	if player:
+		if player.get("_control_locked") == true or player.get("_death_active") == true:
+			return false
+		var world := player.get_parent()
+		if world and world.get("_death_in_progress") == true:
+			return false
+	return true
 
 
 func _build():

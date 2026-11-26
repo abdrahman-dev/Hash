@@ -36,6 +36,8 @@ var _music: AudioStreamPlayer
 
 
 func _ready():
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	get_tree().paused = false
 	_music = AudioStreamPlayer.new()
 	var stream := AudioStreamWAV.new()
 	stream = preload("res://Sounds/Theme/remnant_theme.wav")
